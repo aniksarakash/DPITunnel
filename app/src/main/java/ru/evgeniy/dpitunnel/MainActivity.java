@@ -7,10 +7,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.ProxyInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -20,6 +23,10 @@ import android.widget.Toast;
 
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.ProxySelector;
 import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -63,12 +70,12 @@ public class MainActivity extends AppCompatActivity {
         // Set logo state
         if(isServiceRunning(NativeService.class)) {
             asciiLogo.setText(R.string.app_ascii_logo_unlock);
-            asciiLogo.setTextColor(Color.GREEN);
+            asciiLogo.setTextColor(getResources().getColor(R.color.colorAccent));
             mainButton.setText(R.string.on);
         }
         else {
             asciiLogo.setText(R.string.app_ascii_logo_lock);
-            asciiLogo.setTextColor(Color.RED);
+            asciiLogo.setTextColor(Color.BLACK);
             mainButton.setText(R.string.off);
         }
 
@@ -82,12 +89,12 @@ public class MainActivity extends AppCompatActivity {
                 if (intent.getAction().equals("LOGO_BUTTON_OFF")) {
                     // Make logo red and set button to off
                     asciiLogo.setText(R.string.app_ascii_logo_lock);
-                    asciiLogo.setTextColor(Color.RED);
+                    asciiLogo.setTextColor(Color.BLACK);
                     mainButton.setText(R.string.off);
                 } else if (intent.getAction().equals("LOGO_BUTTON_ON")) {
                     // Make logo green and set button to on
                     asciiLogo.setText(R.string.app_ascii_logo_unlock);
-                    asciiLogo.setTextColor(Color.GREEN);
+                    asciiLogo.setTextColor(getResources().getColor(R.color.colorAccent));
                     mainButton.setText(R.string.on);
                 }
             }

@@ -14,8 +14,13 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
+        // Set custom theme
+        setTheme(R.style.SettingsFragmentStyle);
+
+        // Find layout elements
         settingsBackButton = findViewById(R.id.settings_back_button);
 
+        // Set listeners
         settingsBackButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

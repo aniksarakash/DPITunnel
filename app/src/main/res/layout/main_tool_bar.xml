@@ -32,7 +32,9 @@
             android:layout_centerVertical="true"
             android:gravity="center_vertical"
             android:text="@string/app_name"
-            android:textAppearance="@style/TextAppearance.AppCompat.Title.Inverse" />
+            android:textAppearance="@style/TextAppearance.AppCompat.Title"
+            android:textColor="@color/textColor"
+            android:fontFamily="@font/samsungone" />
 
         <ImageButton
             android:id="@+id/settings_button"
@@ -42,6 +44,12 @@
             android:layout_centerVertical="true"
             android:background="@null"
             app:srcCompat="@drawable/ic_settings" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_alignParentBottom="true"
+            android:background="@color/colorAccent" />
 
     </RelativeLayout>
 

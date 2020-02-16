@@ -37,7 +37,14 @@
             android:singleLine="true"
             android:selectAllOnFocus="true"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textColor="@android:color/white" />
+            android:textColor="@color/textColor"
+            android:fontFamily="@font/samsungone" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_alignParentBottom="true"
+            android:background="@color/colorAccent" />
 
     </RelativeLayout>
 

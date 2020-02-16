@@ -26,7 +26,9 @@
 
     <Button
         android:id="@+id/main_button"
-        style="@style/Widget.AppCompat.Button.Colored"
+        style="@style/Widget.AppCompat.Button.Borderless.Colored"
+        android:textColor="@color/textColor"
+        android:fontFamily="@font/samsungone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -40,7 +42,9 @@
 
     <Button
         android:id="@+id/update_hostlist_button"
-        style="@style/Widget.AppCompat.Button.Colored"
+        style="@style/Widget.AppCompat.Button.Borderless.Colored"
+        android:textColor="@color/textColor"
+        android:fontFamily="@font/samsungone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
