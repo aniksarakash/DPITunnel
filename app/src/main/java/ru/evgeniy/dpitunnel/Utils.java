@@ -1,13 +1,21 @@
 package ru.evgeniy.dpitunnel;
 
-import android.app.ActivityManager;
-import android.content.Context;
+import android.util.Base64;
 import android.util.Log;
+
+import org.xbill.DNS.DClass;
+import org.xbill.DNS.Message;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.RRset;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.Section;
+import org.xbill.DNS.Type;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.Proxy;
 import java.net.URL;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -16,27 +24,36 @@ public class Utils {
 
     public static String makeDOHRequest(String doh_server, String hostname)
     {
+        String log_tag = "Java/Utils/makeDOHReqst";
+
         String response = "";
         try {
+            // Create DNS request
+            String hostname_full = hostname + '.'; // Dnsjava require dot at the end of hostname
+            Message dns_message = Message.newQuery(Record.newRecord(new Name(hostname_full), Type.A, DClass.IN));
+
+            // Encode DNS request to base64
+            String dns_message_encoded = Base64.encodeToString(dns_message.toWire(), Base64.NO_PADDING);
+
             System.setProperty("http.keepAlive", "false");
             System.setProperty("java.net.preferIPv4Stack" , "true");
-            URL url = new URL(doh_server + "/dns-query?name=" + hostname + "&type=A");
-            HttpsURLConnection c = (HttpsURLConnection) url.openConnection(Proxy.NO_PROXY);
+            URL url = new URL(doh_server + "/dns-query?dns=" + dns_message_encoded);
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection(Proxy.NO_PROXY);
 
             // Add header
-            c.setRequestProperty("accept", "application/dns-json");
+            connection.setRequestProperty("accept", "application/dns-message");
 
             // Create the SSL connection
-            c.setSSLSocketFactory(new NoSSLv3SocketFactory());
+            connection.setSSLSocketFactory(new NoSSLv3SocketFactory());
 
             // Set options and connect
-            c.setReadTimeout(700);
-            c.setConnectTimeout(700);
-            c.setRequestMethod("GET");
-            c.setDoInput(true);
+            connection.setReadTimeout(700);
+            connection.setConnectTimeout(700);
+            connection.setRequestMethod("GET");
+            connection.setDoInput(true);
 
             // Save to string
-            InputStream in = c.getInputStream();
+            InputStream in = connection.getInputStream();
 
             ByteArrayOutputStream result = new ByteArrayOutputStream();
             byte[] buffer = new byte[1024];
@@ -45,10 +62,24 @@ public class Utils {
                 result.write(buffer, 0, length);
             }
 
-            response = result.toString("UTF-8");
+            Message dns_response = new Message(result.toByteArray());
+            // Get list of RRset
+            List<RRset> rrset_list = dns_response.getSectionRRsets(Section.ANSWER);
+            // Try to find RRset with A type
+            for (RRset rrset : rrset_list)
+                if(rrset.getType() == Type.A){
+                    // Get all A records
+                    List<Record> records = rrset.rrs();
+                    for(Record record : records) {
+                        if(record.getName().equals(Name.fromString(hostname_full)))
+                            response = record.rdataToString();
+                    }
+
+                    break;
+                }
 
         } catch (Exception e) {
-            Log.e("Java/Utils/makeDOHReqst", "DoH request failed");
+            Log.e(log_tag, "DoH request failed");
             e.printStackTrace();
         }
 

@@ -26,10 +26,12 @@ public class NativeService extends Service {
     thread nativeThread = new thread();
     @Override
     public void onCreate() {
+        String log_tag = "Java/NativeService/onCreate";
+
         try {
             setApplicationDirectory(this.getPackageManager().getPackageInfo(this.getPackageName(), 0).applicationInfo.dataDir + "/");
         } catch (PackageManager.NameNotFoundException e) {
-            Log.e("Java/NativeService/onCreate", "Package name not found");
+            Log.e(log_tag, "Package name not found");
             return;
         }
 
@@ -52,7 +54,7 @@ public class NativeService extends Service {
 
                 su.waitFor();
             } catch (Exception e) {
-                Log.e("Java/NativeService/onCreate", "Failed to set http_proxy global settings");
+                Log.e(log_tag, "Failed to set http_proxy global settings");
             }
         }
 
@@ -62,12 +64,14 @@ public class NativeService extends Service {
     }
 
     private class thread extends Thread{
+        String log_tag = "Java/NativeService/nativeThread";
+
         volatile boolean isRunning = true;
         @Override
         public void run() {
             if(init(PreferenceManager.getDefaultSharedPreferences(NativeService.this)) == -1)
             {
-                Log.e("Java/NativeService/nativeThread", "Init failure");
+                Log.e(log_tag, "Init failure");
                 NativeService.this.stopSelf();
                 return;
             }
@@ -86,6 +90,7 @@ public class NativeService extends Service {
 
     @Override
     public void onDestroy() {
+        String log_tag = "Java/NativeService/onDestroy";
 
         // Unset http_proxy settings if need
         if(prefs.getBoolean("other_proxy_setting", false)) {
@@ -101,7 +106,7 @@ public class NativeService extends Service {
 
                 su.waitFor();
             } catch (Exception e) {
-                Log.e("Java/NativeService/onCreate", "Failed to unset http_proxy global settings");
+                Log.e(log_tag, "Failed to unset http_proxy global settings");
             }
         }
 

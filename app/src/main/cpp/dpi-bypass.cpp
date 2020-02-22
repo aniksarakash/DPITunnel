@@ -228,18 +228,10 @@ int resolve_host_over_doh(std::string host, std::string & ip)
     if(response_string.empty())
     {
         log_error(log_tag.c_str(), "Failed to make request to DoH server");
-    }
-
-	// Parse recieved response with rapidjson
-	rapidjson::Document response_string_json;
-    if(response_string_json.Parse(response_string.c_str()).HasParseError())
-    {
-        log_error(log_tag.c_str(), "Failed to parse DoH response");
         return -1;
     }
 
-	auto answers_array = response_string_json["Answer"].GetArray();
-	ip = answers_array[answers_array.Size() - 1]["data"].GetString();
+	ip = response_string;
 
 	return 0;
 }
