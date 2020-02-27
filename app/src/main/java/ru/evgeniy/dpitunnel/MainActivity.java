@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -101,7 +102,12 @@ public class MainActivity extends AppCompatActivity {
                     stopService(new Intent(MainActivity.this, NativeService.class));
                 }
                 else {
-                    startService(new Intent(MainActivity.this, NativeService.class));
+                    Intent intent = new Intent(MainActivity.this, NativeService.class);
+
+                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                        startForegroundService(intent);
+                    else
+                        startService(intent);
                 }
             }
         });
