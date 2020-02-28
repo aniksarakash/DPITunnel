@@ -22,6 +22,7 @@ import java.io.DataOutputStream;
 public class NativeService extends Service {
 
     private SharedPreferences prefs;
+    private static int FOREGROUND_ID = 97456;
     public static final String CHANNEL_ID = "DPITunnelChannel";
     public static final String ACTION_STOP = "ru.evgeniy.dpitunel.ACTION_STOP";
 
@@ -34,6 +35,28 @@ public class NativeService extends Service {
     @Override
     public void onCreate() {
         String log_tag = "Java/NativeService/onCreate";
+
+        // Start foreground service
+        createNotificationChannel();
+
+        // Add stop service button
+        Intent intent1 = new Intent();
+        intent1.setAction(ACTION_STOP);
+        PendingIntent pendingIntent1 = PendingIntent.getBroadcast(this, 0, intent1, 0);
+
+        // Build notification
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle(getText(R.string.app_name))
+                .setContentText(getText(R.string.service_is_running))
+                .setSmallIcon(R.mipmap.ic_notification_logo)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .addAction(R.drawable.ic_off_button, getText(R.string.off), pendingIntent1)
+                .setStyle(new NotificationCompat.DecoratedCustomViewStyle());
+
+        Notification notification = builder.build();
+
+        // Show notification
+        startForeground(FOREGROUND_ID, notification);
 
         try {
             setApplicationDirectory(this.getPackageManager().getPackageInfo(this.getPackageName(), 0).applicationInfo.dataDir + "/");
@@ -113,7 +136,7 @@ public class NativeService extends Service {
         Notification notification = builder.build();
 
         // Show notification
-        startForeground(1, notification);
+        startForeground(FOREGROUND_ID, notification);
 
         return START_NOT_STICKY;
     }
