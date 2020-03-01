@@ -24,7 +24,7 @@ public class NativeService extends Service {
     private SharedPreferences prefs;
     private static int FOREGROUND_ID = 97456;
     public static final String CHANNEL_ID = "DPITunnelChannel";
-    public static final String ACTION_STOP = "ru.evgeniy.dpitunel.ACTION_STOP";
+    public static final String ACTION_STOP = "ru.evgeniy.dpitunnel.ACTION_STOP";
 
     @Override
     public IBinder onBind(Intent intent) {

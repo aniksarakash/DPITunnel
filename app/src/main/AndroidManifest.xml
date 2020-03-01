@@ -23,7 +23,9 @@
             android:theme="@style/AppTheme" />
         <service android:name=".NativeService" />
     </application>
+
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
 </manifest>

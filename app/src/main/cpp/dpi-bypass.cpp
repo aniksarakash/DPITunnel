@@ -27,6 +27,7 @@ std::string CONNECTION_ESTABLISHED_RESPONSE("HTTP/1.1 200 Connection established
 rapidjson::Document hostlist_document;
 std::string app_dir;
 JNIEnv* jni_env;
+std::vector<pid_t> child_processes;
 
 struct
 {
@@ -824,7 +825,12 @@ int server_socket;
 extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_NativeService_init(JNIEnv* env, jobject obj, jobject prefs_object)
 {
     std::string log_tag = "CPP/init";
+
+    // Store JavaVM globally
     jni_env = env;
+
+    // Clear child processes vector
+    child_processes.clear();
 
     // Find SharedPreferences
     jclass prefs_class = env->FindClass("android/content/SharedPreferences");
@@ -943,7 +949,9 @@ extern "C" JNIEXPORT void Java_ru_evgeniy_dpitunnel_NativeService_acceptClient(J
     }
 
     // Process client
-    if(fork() == 0)
+    pid_t child_process = fork();
+    child_processes.push_back(child_process);
+    if(child_process == 0)
     {
         process_client(client_socket);
         exit(0);
@@ -954,6 +962,12 @@ extern "C" JNIEXPORT void Java_ru_evgeniy_dpitunnel_NativeService_deInit(JNIEnv*
 {
     std::string log_tag = "CPP/deInit";
 
+    // Kill child processes
+	for (pid_t child_process : child_processes) {
+		kill(child_process, SIGKILL);
+	}
+
+    // Shutdown server socket
     if(shutdown(server_socket, SHUT_RDWR) == -1)
     {
         log_error(log_tag.c_str(), "Can't shutdown server socket. Errno: %s", strerror(errno));

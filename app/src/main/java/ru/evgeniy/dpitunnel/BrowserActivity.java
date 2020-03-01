@@ -3,15 +3,18 @@ package ru.evgeniy.dpitunnel;
 import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.net.Proxy;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.ArrayMap;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -20,6 +23,8 @@ import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -65,8 +70,9 @@ public class BrowserActivity extends AppCompatActivity {
                     if(isStringMatch(browserEditText.getText().toString(), urlPattern)) {
                         browserWebview.loadUrl(browserEditText.getText().toString());
                     } else {
-                        browserWebview.loadUrl("https://www.google.com/search?q=" + browserEditText.getText().toString().replace(" ", "+"));
-                        browserEditText.setText("https://www.google.com/search?q=" + browserEditText.getText().toString().replace(" ", "+"));
+                        String url = "https://oscobo.com/search.php?q=" + browserEditText.getText().toString().replace(" ", "+");
+                        browserWebview.loadUrl(url);
+                        browserEditText.setText(url);
                     }
 
                     return true;
@@ -86,16 +92,50 @@ public class BrowserActivity extends AppCompatActivity {
 
         // Set DPI Tunnel proxy
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        System.setProperty("http.proxyHost", "127.0.0.1");
-        System.setProperty("http.proxyPort", prefs.getString("other_bind_port", "8080"));
-        System.setProperty("https.proxyHost", "127.0.0.1");
-        System.setProperty("https.proxyPort", prefs.getString("other_bind_port", "8080"));
+        setProxy(browserWebview, "127.0.0.1", Integer.valueOf(prefs.getString("other_bind_port", "8080")), "");
 
         // Enable javascript
         browserWebview.getSettings().setJavaScriptEnabled(true);
 
         // Load start page
-        browserWebview.loadUrl("http://google.com");
+        browserWebview.loadUrl("https://oscobo.com/");
+    }
+
+    private static boolean setProxy(WebView webView, String host, int port, String exclusion) {
+        String log_tag = "Java/BrowserActivity/setProxy";
+
+        Context appContext = webView.getContext().getApplicationContext();
+        System.setProperty("http.proxyHost", host);
+        System.setProperty("http.proxyPort", port + "");
+        System.setProperty("http.nonProxyHosts", exclusion);
+        System.setProperty("https.proxyHost", host);
+        System.setProperty("https.proxyPort", port + "");
+        System.setProperty("https.nonProxyHosts", exclusion);
+        try {
+            Class applictionCls = appContext.getClass();
+            Field loadedApkField = applictionCls.getField("mLoadedApk");
+            loadedApkField.setAccessible(true);
+            Object loadedApk = loadedApkField.get(appContext);
+            Class loadedApkCls = Class.forName("android.app.LoadedApk");
+            Field receiversField = loadedApkCls.getDeclaredField("mReceivers");
+            receiversField.setAccessible(true);
+            ArrayMap receivers = (ArrayMap) receiversField.get(loadedApk);
+            for (Object receiverMap : receivers.values()) {
+                for (Object rec : ((ArrayMap) receiverMap).keySet()) {
+                    Class clazz = rec.getClass();
+                    if (clazz.getName().contains("ProxyChangeListener")) {
+                        Method onReceiveMethod = clazz.getDeclaredMethod("onReceive", Context.class, Intent.class);
+                        Intent intent = new Intent(Proxy.PROXY_CHANGE_ACTION);
+                        onReceiveMethod.invoke(rec, appContext, intent);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(log_tag, "Failed to set proxy for WebView");
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
     private static boolean isStringMatch(String s, String pattern) {
