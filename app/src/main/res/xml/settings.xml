@@ -111,6 +111,12 @@
             android:title="@string/other_hostlist_title"
             android:defaultValue="true" />
         <EditTextPreference
+            android:dialogTitle="@string/other_hostlist_path_title"
+            android:key="other_hostlist_path"
+            android:summary="@string/other_hostlist_path_summary"
+            android:title="@string/other_hostlist_path_title"
+            android:defaultValue="/sdcard/hostlist.txt" />
+        <EditTextPreference
             android:dialogTitle="@string/other_socks5_title"
             android:key="other_socks5"
             android:title="@string/other_socks5_title"

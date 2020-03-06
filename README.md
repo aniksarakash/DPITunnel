@@ -41,6 +41,12 @@ There is a lot of methods.
 First, we can split request in packets.
 Second, we can modify HTTP packet, because most DPIs can extract site address only from standard HTTP packet. For example: we can replace Host: header with hOsT: or replace DOS end of line with UNIX. Don't worry, this modifications shouldn't break any website as they're fully compatible with TCP and HTTP standards.
 
+## Links
+[4PDA](https://4pda.ru/forum/index.php?showtopic=981039) (Russian forum)
+[F-Droid](https://f-droid.org/en/packages/ru.evgeniy.dpitunnel) (Open source app store)
+[Xda labs](https://labs.xda-developers.com/store/app/ru.evgeniy.dpitunnel) (Xda app store)
+[@DPITunnelOFFICIAL](https://t.me/DPITunnelOFFICIAL) (Telegram group) You may ask for help there.
+
 ## License
 
 Licensed under the MIT license. See [LICENSE](https://github.com/zhenyolka/DPITunnel/blob/master/LICENSE "LICENSE").

@@ -44,4 +44,7 @@
     <string name="update_hostlist_bad">Произошла ошибка во время обновления hostlist</string>
     <string name="please_run_service">Сервис DPI Tunnel не запущен. Пожалуйста, запустите его</string>
     <string name="service_is_running">DPITunnel работает...</string>
+    <string name="other_hostlist_path_title">Указать путь до hostlist файла</string>
+    <string name="other_hostlist_path_summary">Эта опция задает путь расположеия файла hostlist</string>
+    <string name="please_grant_permissions">Пожалуйста, предоставьте необходимые разрешения. Приложение не может работать без них.</string>
 </resources>

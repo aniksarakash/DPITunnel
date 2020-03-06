@@ -25,7 +25,7 @@
 
 std::string CONNECTION_ESTABLISHED_RESPONSE("HTTP/1.1 200 Connection established\r\n\r\n");
 rapidjson::Document hostlist_document;
-std::string app_dir;
+std::string hostlist_path;
 JNIEnv* jni_env;
 std::vector<pid_t> child_processes;
 
@@ -786,7 +786,7 @@ int parse_hostlist()
 
 	// Open hostlist file
 	std::ifstream hostlist_file;
-	hostlist_file.open(app_dir + "hostlist.txt");
+	hostlist_file.open(hostlist_path);
 	if(!hostlist_file)
 	{
 		log_error(log_tag.c_str(), "Failed to open hostlist file");
@@ -808,16 +808,16 @@ int parse_hostlist()
 	return 0;
 }
 
-extern "C" JNIEXPORT void JNICALL Java_ru_evgeniy_dpitunnel_NativeService_setApplicationDirectory(JNIEnv* env, jobject obj, jstring ApplicationDirectory)
+extern "C" JNIEXPORT void JNICALL Java_ru_evgeniy_dpitunnel_NativeService_setHostlistPath(JNIEnv* env, jobject obj, jstring HostlistPath)
 {
-    if(!ApplicationDirectory) return;
+    if(!HostlistPath) return;
 
-    const char* app_dir_c = env->GetStringUTFChars(ApplicationDirectory, NULL);
-    if (!app_dir_c) return;
-    const jsize len = env->GetStringUTFLength(ApplicationDirectory);
-    app_dir = std::string(app_dir_c, len);
+    const char* hostlist_path_c = env->GetStringUTFChars(HostlistPath, NULL);
+    if (!hostlist_path_c) return;
+    const jsize len = env->GetStringUTFLength(HostlistPath);
+    hostlist_path = std::string(hostlist_path_c, len);
 
-    env->ReleaseStringUTFChars(ApplicationDirectory, app_dir_c);
+    env->ReleaseStringUTFChars(HostlistPath, hostlist_path_c);
 }
 
 int server_socket;
@@ -859,15 +859,15 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_NativeService_init(J
     // Fill settings
     jstring string_object;
     Options.https.is_use_split = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("https_split"), false);
-    string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("https_split_position"), env->NewStringUTF(" "));
+    string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("https_split_position"), NULL);
     Options.https.split_position = atoi(env->GetStringUTFChars(string_object, 0));
     Options.https.is_use_socks5 = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("https_socks5"), false);
 
     Options.http.is_use_split = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("http_split"), false);
-    string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("http_split_position"), env->NewStringUTF(" "));
+    string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("http_split_position"), NULL);
     Options.http.split_position = atoi(env->GetStringUTFChars(string_object, 0));
     Options.http.is_change_host_header = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("http_header_switch"), false);
-    string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("http_header_spell"), env->NewStringUTF(" "));
+    string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("http_header_spell"), NULL);
     Options.http.host_header = env->GetStringUTFChars(string_object, 0);
     Options.http.is_add_dot_after_host = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("http_dot"), false);
     Options.http.is_add_tab_after_host = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("http_tab"), false);
@@ -879,13 +879,13 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_NativeService_init(J
 
     Options.dns.is_use_doh = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("dns_doh"), false);
     Options.dns.is_use_doh_only_for_site_in_hostlist = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("dns_doh_hostlist"), false);
-    string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("dns_doh_server"), env->NewStringUTF(" "));
+    string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("dns_doh_server"), NULL);
     Options.dns.dns_doh_server = env->GetStringUTFChars(string_object, 0);
 
     Options.other.is_use_hostlist = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("other_hostlist"), false);
-    string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("other_socks5"), env->NewStringUTF(" "));
+    string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("other_socks5"), NULL);
     Options.other.socks5_server = env->GetStringUTFChars(string_object, 0);
-    string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("other_bind_port"), env->NewStringUTF(" "));
+    string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("other_bind_port"), NULL);
     Options.other.bind_port = atoi(env->GetStringUTFChars(string_object, 0));
 
 	// Parse hostlist if need

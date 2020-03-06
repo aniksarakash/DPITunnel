@@ -1,5 +1,6 @@
 package ru.evgeniy.dpitunnel;
 
+import android.Manifest;
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -19,9 +20,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
+
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.security.Permission;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -39,20 +45,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Set gefault settings values
+        PreferenceManager.setDefaultValues(this, R.xml.settings, false);
+
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         if (!prefs.getBoolean("firstTimeFlag", false)) {
             // do one time tasks
-            new updateHostlistTask().execute();
+            updateHostlist();
 
             // mark first time has ran.
             SharedPreferences.Editor editor = prefs.edit();
             editor.putBoolean("firstTimeFlag", true);
             editor.commit();
         }
-
-        // Set gefault settings values
-        PreferenceManager.setDefaultValues(this, R.xml.settings, false);
 
         // Find layout elements
         mainButton = findViewById(R.id.main_button);
@@ -102,12 +108,30 @@ public class MainActivity extends AppCompatActivity {
                     stopService(new Intent(MainActivity.this, NativeService.class));
                 }
                 else {
-                    Intent intent = new Intent(MainActivity.this, NativeService.class);
+                    // Check permissions
+                    PermissionListener permissionListener = new PermissionListener() {
+                        @Override
+                        public void onPermissionGranted() {
+                            // If ok start service
+                            Intent intent = new Intent(MainActivity.this, NativeService.class);
 
-                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                        startForegroundService(intent);
-                    else
-                        startService(intent);
+                            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                                startForegroundService(intent);
+                            else
+                                startService(intent);
+                        }
+
+                        @Override
+                        public void onPermissionDenied(List<String> deniedPermissions) {
+                            // If not ok show warning
+                            Toast.makeText(MainActivity.this, getString(R.string.please_grant_permissions), Toast.LENGTH_LONG).show();
+                        }
+                    };
+
+                    TedPermission.with(MainActivity.this)
+                            .setPermissionListener(permissionListener)
+                            .setPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
+                            .check();
                 }
             }
         });
@@ -126,9 +150,30 @@ public class MainActivity extends AppCompatActivity {
         updateHostlistButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new updateHostlistTask().execute();
+                updateHostlist();
             }
         });
+    }
+
+    private void updateHostlist() {
+        PermissionListener permissionListener = new PermissionListener() {
+            @Override
+            public void onPermissionGranted() {
+                // If ok update hostlist
+                new updateHostlistTask().execute();
+            }
+
+            @Override
+            public void onPermissionDenied(List<String> deniedPermissions) {
+                // If not ok show warning
+                Toast.makeText(MainActivity.this, getString(R.string.please_grant_permissions), Toast.LENGTH_LONG).show();
+            }
+        };
+
+        TedPermission.with(MainActivity.this)
+                .setPermissionListener(permissionListener)
+                .setPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .check();
     }
 
     private boolean isServiceRunning(Class<?> serviceClass) {
@@ -142,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class updateHostlistTask extends AsyncTask<Void, Void, Void> {
+        private SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         private ProgressBar updateHostlistBar = findViewById(R.id.update_hostlist_bar);
         private boolean isOK = true;
 
@@ -154,8 +200,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... values) {
             try {
-
-                FileOutputStream f = new FileOutputStream(MainActivity.this.getPackageManager().getPackageInfo(MainActivity.this.getPackageName(), 0).applicationInfo.dataDir + "/hostlist.txt");
+                FileOutputStream f = new FileOutputStream(prefs.getString("other_hostlist_path", null));
                 URL u = new URL("https://reestr.rublacklist.net/api/v2/domains/json");
                 HttpsURLConnection c = (HttpsURLConnection) u.openConnection();
 

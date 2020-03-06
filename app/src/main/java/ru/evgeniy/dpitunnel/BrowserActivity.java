@@ -70,7 +70,7 @@ public class BrowserActivity extends AppCompatActivity {
                     if(isStringMatch(browserEditText.getText().toString(), urlPattern)) {
                         browserWebview.loadUrl(browserEditText.getText().toString());
                     } else {
-                        String url = "https://oscobo.com/search.php?q=" + browserEditText.getText().toString().replace(" ", "+");
+                        String url = "https://searx.info/?q=" + browserEditText.getText().toString().replace(" ", "+");
                         browserWebview.loadUrl(url);
                         browserEditText.setText(url);
                     }
@@ -98,7 +98,7 @@ public class BrowserActivity extends AppCompatActivity {
         browserWebview.getSettings().setJavaScriptEnabled(true);
 
         // Load start page
-        browserWebview.loadUrl("https://oscobo.com/");
+        browserWebview.loadUrl("https://searx.info");
     }
 
     private static boolean setProxy(WebView webView, String host, int port, String exclusion) {
