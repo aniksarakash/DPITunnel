@@ -30,8 +30,7 @@
     <string name="doh_summary">Эта опция включает поддержку DoH протокола для DNS запросов</string>
     <string name="dns_doh_hostlist_title">Использовать DoH протокол только для сайтов в hostlist</string>
     <string name="dns_doh_hostlist_summary">Если эта опция включена, DoH протокол используется только для сайтов в hostlist (требует включения опций поддержки DoH протокола и hostlist)</string>
-    <string name="dns_doh_server_title">Адрес DNS сервера</string>
-    <string name="dns_doh_server_summary">DNS-сервер используется только для запросов DoH. Поддерживает только JSON-серверы</string>
+    <string name="dns_doh_server_title">Адреса DNS серверов</string>
     <string name="other_hostlist_title">Использовать hostlist</string>
     <string name="other_hostlist_summary">Если эта опция включена, методы обхода DPI применяются только для сайтов из списка (список находится в папке программы и обновляется кнопкой на главном экране)</string>
     <string name="other_socks5_title">Адрес SOCKS5 прокси сервера</string>
@@ -47,4 +46,5 @@
     <string name="other_hostlist_path_title">Указать путь до hostlist файла</string>
     <string name="other_hostlist_path_summary">Эта опция задает путь расположеия файла hostlist</string>
     <string name="please_grant_permissions">Пожалуйста, предоставьте необходимые разрешения. Приложение не может работать без них.</string>
+    <string name="dns_doh_server_summary">Вы можете ввести несколько DoH серверов, вводя их с новой строки</string>
 </resources>

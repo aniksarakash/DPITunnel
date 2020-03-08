@@ -31,8 +31,7 @@
     <string name="doh_summary">This option enables DoH protocol support for DNS queries</string>
     <string name="dns_doh_hostlist_title">Use DoH protocol only for sites in hostlist</string>
     <string name="dns_doh_hostlist_summary">If this option is enabled, the DoH protocol is used only for sites in the hostlist (requires enabling DoH protocol and hostlist support options)</string>
-    <string name="dns_doh_server_title">DNS server address</string>
-    <string name="dns_doh_server_summary">DNS server is used only for DoH requests. Supports only JSON based servers</string>
+    <string name="dns_doh_server_title">DNS servers addresses</string>
     <string name="other_hostlist_title">Use hostlist</string>
     <string name="other_hostlist_summary">If this option is enabled, DPI bypass methods are applied only to sites from the list (the list is located in the program folder and is updated with a button on the main screen)</string>
     <string name="other_socks5_title">SOCKS5 proxy address</string>
@@ -48,4 +47,5 @@
     <string name="other_hostlist_path_title">Set path to hostlist file</string>
     <string name="other_hostlist_path_summary">This option set path to hostlist file</string>
     <string name="please_grant_permissions">Please grant required permissions. App can\'t work without them.</string>
+    <string name="dns_doh_server_summary">You can enter several DoH servers by entering them from a new line</string>
 </resources>

@@ -57,7 +57,7 @@ struct
 	{
 		bool is_use_doh;
 		bool is_use_doh_only_for_site_in_hostlist;
-		std::string dns_doh_server;
+		std::string dns_doh_servers;
 	} dns;
 
 	struct
@@ -223,12 +223,29 @@ int resolve_host_over_doh(std::string host, std::string & ip)
         return -1;
     }
 
-    // Call method
-    jstring response_string_object = (jstring) jni_env->CallStaticObjectMethod(utils_class, utils_make_doh_request, jni_env->NewStringUTF(Options.dns.dns_doh_server.c_str()), jni_env->NewStringUTF(host.c_str()));
-    std::string response_string = jni_env->GetStringUTFChars(response_string_object, 0);
-    if(response_string.empty())
+    // Since we have some doh servers, we need to use they by turns
+    std::string response_string;
+
+    char delimiter = '\n';
+    std::string doh_server;
+    std::istringstream stream(Options.dns.dns_doh_servers);
+    bool isOK = false;
+    while (std::getline(stream, doh_server, delimiter))
     {
-        log_error(log_tag.c_str(), "Failed to make request to DoH server");
+        // Call method
+        jstring response_string_object = (jstring) jni_env->CallStaticObjectMethod(utils_class, utils_make_doh_request, jni_env->NewStringUTF(doh_server.c_str()), jni_env->NewStringUTF(host.c_str()));
+        response_string = jni_env->GetStringUTFChars(response_string_object, 0);
+        if(response_string.empty())
+        {
+            log_error(log_tag.c_str(), "Failed to make request to DoH server. Trying again...");
+            continue;
+        } else
+            isOK = true;
+    }
+
+    if(!isOK)
+    {
+        log_error(log_tag.c_str(), "No request to the DoH servers was successful. Can't process client");
         return -1;
     }
 
@@ -880,7 +897,7 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_NativeService_init(J
     Options.dns.is_use_doh = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("dns_doh"), false);
     Options.dns.is_use_doh_only_for_site_in_hostlist = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("dns_doh_hostlist"), false);
     string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("dns_doh_server"), NULL);
-    Options.dns.dns_doh_server = env->GetStringUTFChars(string_object, 0);
+    Options.dns.dns_doh_servers = env->GetStringUTFChars(string_object, 0);
 
     Options.other.is_use_hostlist = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("other_hostlist"), false);
     string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("other_socks5"), NULL);

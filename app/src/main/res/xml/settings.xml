@@ -99,7 +99,7 @@
             android:key="dns_doh_server"
             android:summary="@string/dns_doh_server_summary"
             android:title="@string/dns_doh_server_title"
-            android:defaultValue="https://cloudflare-dns.com" />
+            android:defaultValue="https://cloudflare-dns.com/dns-query" />
 
 
     </PreferenceCategory>

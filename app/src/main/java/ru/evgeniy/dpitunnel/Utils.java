@@ -22,7 +22,7 @@ import javax.net.ssl.SSLContext;
 
 public class Utils {
 
-    public static String makeDOHRequest(String doh_server, String hostname)
+    public static String makeDOHRequest(String doh_server_url, String hostname)
     {
         String log_tag = "Java/Utils/makeDOHReqst";
 
@@ -37,7 +37,20 @@ public class Utils {
 
             System.setProperty("http.keepAlive", "false");
             System.setProperty("java.net.preferIPv4Stack" , "true");
-            URL url = new URL(doh_server + "/dns-query?dns=" + dns_message_encoded);
+
+            // Proper process test.com and test.com/dns-query urls
+
+            // Remove '/' if it exists on string end
+            if(doh_server_url.charAt(doh_server_url.length() - 1) == '/') doh_server_url = doh_server_url.substring(0, doh_server_url.length() - 1);
+
+            // Append request
+            String url_str;
+            if(doh_server_url.substring(doh_server_url.length() - 9).equals("dns-query"))
+                url_str = doh_server_url + "?dns=" + dns_message_encoded;
+            else
+                url_str = doh_server_url + "/?dns=" + dns_message_encoded;
+
+            URL url = new URL(url_str);
             HttpsURLConnection connection = (HttpsURLConnection) url.openConnection(Proxy.NO_PROXY);
 
             // Add header

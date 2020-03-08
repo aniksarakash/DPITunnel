@@ -29,8 +29,8 @@
     <string name="doh_summary">Ta opcja włącza wsparcie dla protokołu DoH dla zapytań DNS</string>
     <string name="dns_doh_hostlist_title">Używaj protokołu DoH tylko dla stron w liście hostów</string>
     <string name="dns_doh_hostlist_summary">Gdy ta opcja jest włączona, protokół DoH jest używany tylko dla stron w liście hostów (ta opcja wymaga włączenia opcji DoH i protokołu hostów)</string>
-    <string name="dns_doh_server_title">Adres serwera DNS</string>
-    <string name="dns_doh_server_summary">Serwer DNS jest używany tylko dla żądań DoH. Wspierane są tylko serwery DoH używające JSON</string>
+    <string name="dns_doh_server_title">Adresy serwerów DNS</string>
+    <string name="dns_doh_server_summary">Możesz wprowadzić kilka serwerów DoH, wprowadzając je z nowej linii</string>
     <string name="other_hostlist_title">Używaj listy hostów</string>
     <string name="other_hostlist_summary">Gdy ta opcja jest włączona, metody obchodzenia DPI są używane tylko dla stron w liście hostów (lista zlokalizowana jest w folderze programu i jest aktualizowana przyciskiem na ekranie głównym)</string>
     <string name="other_socks5_title">Adres proxy SOCKS5</string>
