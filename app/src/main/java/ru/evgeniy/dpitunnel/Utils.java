@@ -18,7 +18,6 @@ import java.net.URL;
 import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
 
 public class Utils {
 
@@ -65,7 +64,7 @@ public class Utils {
             connection.setRequestMethod("GET");
             connection.setDoInput(true);
 
-            // Save to string
+            // Save
             InputStream in = connection.getInputStream();
 
             ByteArrayOutputStream result = new ByteArrayOutputStream();

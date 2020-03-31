@@ -46,4 +46,6 @@
     <string name="other_hostlist_path_title">Ustaw ścieżkę do pliku listy hostów</string>
     <string name="other_hostlist_path_summary">Ta opcja ustawia ścieżkę do pliku listy hostów</string>
     <string name="please_grant_permissions">Udziel wymaganych uprawnień. Aplikacja nie może bez nich działać.</string>
+    <string name="other_proxy_vpn_title">Ustaw globalny serwer proxy za pomocą VPN</string>
+    <string name="other_proxy_vpn_summary">Ustaw proxy DPITunnel za pomocą VpnService (wymaga Androida 5 i wyższych)</string>
 </resources>

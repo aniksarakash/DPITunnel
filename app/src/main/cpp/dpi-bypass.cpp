@@ -65,11 +65,15 @@ struct
         bool is_use_hostlist;
         std::string socks5_server;
         int bind_port;
+        bool is_use_vpn;
     } other;
 } Options;
 
-int find_in_hostlist(std::string host)
+bool find_in_hostlist(std::string host)
 {
+    // VPN mode specific
+    if(Options.other.is_use_vpn) return 1;
+
 	for(const auto & host_in_list : hostlist_document.GetArray())
 	{
 		if(host_in_list.GetString() == host) return 1;
@@ -79,14 +83,55 @@ int find_in_hostlist(std::string host)
 
 int recv_string(int socket, std::string & message)
 {
+    std::string buffer(1024, ' ');
+    ssize_t read_size;
+    size_t message_offset = 0;
+
+    // Set receive timeout on socket
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 300;
+    if(setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout)) < 0)
+    {
+        std::cerr << "Can't setsockopt on socket" << std::endl;
+        return -1;
+    }
+
+    while(true)
+    {
+        read_size = recv(socket, &buffer[0], buffer.size(), 0);
+        if(read_size < 0)
+        {
+            if(errno == EWOULDBLOCK)	break;
+            if(errno == EINTR)      continue; // All is good. This is just interrrupt.
+            else
+            {
+                std::cerr << "There is critical read error. Can't process client. Errno: " << std::strerror(errno) << std::endl;
+                return -1;
+            }
+        }
+        else if(read_size == 0)	return -1;
+
+        if(message_offset + read_size >= message.size()) // If there isn't any space in message string - just increase it
+        {
+            message.resize(message_offset + read_size + 1024);
+        }
+
+        message.insert(message.begin() + message_offset, buffer.begin(), buffer.begin() + read_size);
+        message_offset += read_size;
+    }
+
+    message.resize(message_offset);
+
+    return 0;
+}
+
+int recv_string_with_timeout(int socket, std::string & message, struct timeval timeout)
+{
 	std::string buffer(1024, ' ');
 	ssize_t read_size;
 	size_t message_offset = 0;
 
-	// Set receive timeout on socket
-	struct timeval timeout;
-	timeout.tv_sec = 0;
-	timeout.tv_usec = 300;
 	if(setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout)) < 0)
 	{
 		std::cerr << "Can't setsockopt on socket" << std::endl;
@@ -139,23 +184,22 @@ int send_string(int socket, std::string string_to_send)
 	}
 
 	while(string_to_send.size() - offset != 0)
-        {
-                ssize_t send_size = send(socket, string_to_send.c_str() + offset, string_to_send.size() - offset, 0);
-                if(send_size < 0)
-                {
-                        if(errno == EINTR)      continue; // All is good. This is just interrrupt.
-                        else
-                        {
-                            log_error(log_tag.c_str(), "There is critical send error. Can't process client. Errno: %s", std::strerror(errno));
-                            return -1;
-                        }
-                }
+	{
+	    ssize_t send_size = send(socket, string_to_send.c_str() + offset, string_to_send.size() - offset, 0);
+	    if(send_size < 0)
+	    {
+	        if(errno == EINTR)      continue; // All is good. This is just interrrupt.
+	        else {
+	            log_error(log_tag.c_str(), "There is critical send error. Can't process client. Errno: %s", std::strerror(errno));
+	            return -1;
+	        }
+	    }
 		if(send_size == 0)
 		{
 			return -1;
 		}
-                offset += send_size;
-        }
+		offset += send_size;
+	}
 
 	return 0;
 }
@@ -238,9 +282,10 @@ int resolve_host_over_doh(std::string host, std::string & ip)
         if(response_string.empty())
         {
             log_error(log_tag.c_str(), "Failed to make request to DoH server. Trying again...");
-            continue;
-        } else
+        } else {
             isOK = true;
+            break;
+        }
     }
 
     if(!isOK)
@@ -290,6 +335,15 @@ int resolve_host_over_dns(std::string host, std::string & ip)
 
 int resolve_host(std::string host, std::string & ip)
 {
+	// Check if host is IP
+	struct sockaddr_in sa;
+	int result = inet_pton(AF_INET, host.c_str(), &sa.sin_addr);
+	if(result != 0)
+	{
+		ip = host;
+		return 0;
+	}
+
 	if(Options.dns.is_use_doh && (Options.other.is_use_hostlist ? (Options.dns.is_use_doh_only_for_site_in_hostlist ? find_in_hostlist(host) : true) : true))
 	{
 		return resolve_host_over_doh(host, ip);
@@ -311,7 +365,7 @@ int parse_request(std::string request, std::string & method, std::string & host,
 	method = request.substr(0, method_end_position);
 
 	// Extract hostname an port if exists
-	std::string regex_string = "[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[-a-z0-9]{2,16}(:[0-9]{1,5})?";
+	std::string regex_string = "[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[-a-z0-9]{1,16}(:[0-9]{1,5})?";
 	std::regex url_find_regex(regex_string);
 	std::smatch match;
 
@@ -532,7 +586,10 @@ void proxy_https(int client_socket, std::string host, int port)
 				close(client_socket);
 				return;
 			}
-			is_clienthello_request = false;
+
+			// VPN mode specific
+			// VPN mode requires splitting for all packets
+			is_clienthello_request = Options.other.is_use_vpn;
 		}
 		else
 		{
@@ -763,7 +820,12 @@ void process_client(int client_socket)
 
 	std::string request(2048, ' ');
 
-	if(recv_string(client_socket, request) == -1)
+	// Receive with timeout
+    struct timeval timeout;
+    timeout.tv_sec = 2;
+    timeout.tv_usec = 0;
+
+	if(recv_string_with_timeout(client_socket, request, timeout) == -1)
 	{
 		close(client_socket);
 		return;
@@ -904,6 +966,8 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_NativeService_init(J
     Options.other.socks5_server = env->GetStringUTFChars(string_object, 0);
     string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("other_bind_port"), NULL);
     Options.other.bind_port = atoi(env->GetStringUTFChars(string_object, 0));
+
+    Options.other.is_use_vpn = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("other_vpn_setting"), false);
 
 	// Parse hostlist if need
 	if(Options.other.is_use_hostlist)

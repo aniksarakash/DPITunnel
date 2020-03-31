@@ -48,4 +48,6 @@
     <string name="other_hostlist_path_summary">This option set path to hostlist file</string>
     <string name="please_grant_permissions">Please grant required permissions. App can\'t work without them.</string>
     <string name="dns_doh_server_summary">You can enter several DoH servers by entering them from a new line</string>
+    <string name="other_proxy_vpn_title">Set global proxy with VPN</string>
+    <string name="other_proxy_vpn_summary">Set DPITunnel proxy with VpnService (requires android 5 and high)</string>
 </resources>

@@ -130,6 +130,11 @@
             android:maxLength="5"
             android:defaultValue="8080" />
         <CheckBoxPreference
+            android:key="other_vpn_setting"
+            android:summary="@string/other_proxy_vpn_summary"
+            android:title="@string/other_proxy_vpn_title"
+            android:defaultValue="true" />
+        <CheckBoxPreference
             android:key="other_proxy_setting"
             android:summary="@string/other_proxy_setting_summary"
             android:title="@string/other_proxy_setting_title"

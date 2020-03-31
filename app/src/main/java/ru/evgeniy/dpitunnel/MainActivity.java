@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.VpnService;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.preference.PreferenceManager;
@@ -33,6 +34,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 
 public class MainActivity extends AppCompatActivity {
+    public static final int REQUEST_VPN = 1;
 
     private Button mainButton;
     private ImageButton settingsButton;
@@ -87,11 +89,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
                 if (intent.getAction().equals("LOGO_BUTTON_OFF")) {
+                    // Stop VPN if need
+                    if(prefs.getBoolean("other_vpn_setting", false) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        stopVpn();
+                    }
+
                     // Make logo red and set button to off
                     asciiLogo.setText(R.string.app_ascii_logo_lock);
                     asciiLogo.setTextColor(Color.BLACK);
                     mainButton.setText(R.string.off);
                 } else if (intent.getAction().equals("LOGO_BUTTON_ON")) {
+                    // Start VPN if need
+                    if(prefs.getBoolean("other_vpn_setting", false) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        startVpn();
+                    }
+
                     // Make logo green and set button to on
                     asciiLogo.setText(R.string.app_ascii_logo_unlock);
                     asciiLogo.setTextColor(getResources().getColor(R.color.colorAccent));
@@ -153,6 +165,30 @@ public class MainActivity extends AppCompatActivity {
                 updateHostlist();
             }
         });
+    }
+
+    private void stopVpn() {
+        Tun2HttpVpnService.stop(this);
+    }
+
+    private void startVpn() {
+        Intent i = VpnService.prepare(this);
+        if (i != null) {
+            startActivityForResult(i, REQUEST_VPN);
+        } else {
+            onActivityResult(REQUEST_VPN, RESULT_OK, null);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode != RESULT_OK) {
+            return;
+        }
+        if (requestCode == REQUEST_VPN) {
+            Tun2HttpVpnService.start(this);
+        }
     }
 
     private void updateHostlist() {

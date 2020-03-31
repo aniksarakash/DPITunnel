@@ -47,4 +47,6 @@
     <string name="other_hostlist_path_summary">Эта опция задает путь расположеия файла hostlist</string>
     <string name="please_grant_permissions">Пожалуйста, предоставьте необходимые разрешения. Приложение не может работать без них.</string>
     <string name="dns_doh_server_summary">Вы можете ввести несколько DoH серверов, вводя их с новой строки</string>
+    <string name="other_proxy_vpn_title">Установить глобальный прокси с VPN</string>
+    <string name="other_proxy_vpn_summary">Устанавливает DPITunnel прокси глобально с использованием VpnService (требует android 5 и старше)</string>
 </resources>
