@@ -71,8 +71,41 @@ struct
 
 bool find_in_hostlist(std::string host)
 {
-    // VPN mode specific
-    if(Options.other.is_use_vpn) return 1;
+	std::string log_tag = "CPP/find_in_hostlist";
+
+    // In VPN mode when connecting to https sites proxy server gets CONNECT requests to ip addresses
+    // So if we receive ip address we need to find hostname for it
+
+	// Check if host is IP
+	struct sockaddr_in sa;
+	int result = inet_pton(AF_INET, host.c_str(), &sa.sin_addr);
+    if(Options.other.is_use_vpn && result != 0)
+	{
+		// Find class
+		jclass localdnsserver_class = jni_env->FindClass("ru/evgeniy/dpitunnel/LocalDNSServer");
+		if(localdnsserver_class == NULL)
+		{
+			log_error(log_tag.c_str(), "Failed to find LocalDNSServer class");
+			return 0;
+		}
+
+		// Find Java method
+		jmethodID localdnsserver_get_hostname = jni_env->GetStaticMethodID(localdnsserver_class, "getHostname", "(Ljava/lang/String;)Ljava/lang/String;");
+		if(localdnsserver_get_hostname == NULL)
+		{
+			log_error(log_tag.c_str(), "Failed to find getHostname method");
+			return 0;
+		}
+
+		// Call Java method
+		jstring response_string_object = (jstring) jni_env->CallStaticObjectMethod(localdnsserver_class, localdnsserver_get_hostname, jni_env->NewStringUTF(host.c_str()));
+		host = jni_env->GetStringUTFChars(response_string_object, 0);
+		if(host.empty())
+		{
+			log_error(log_tag.c_str(), "Failed to find hostname to ip");
+			return 0;
+		}
+	}
 
 	for(const auto & host_in_list : hostlist_document.GetArray())
 	{
@@ -90,7 +123,7 @@ int recv_string(int socket, std::string & message)
     // Set receive timeout on socket
     struct timeval timeout;
     timeout.tv_sec = 0;
-    timeout.tv_usec = 300;
+    timeout.tv_usec = 100;
     if(setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout)) < 0)
     {
         std::cerr << "Can't setsockopt on socket" << std::endl;
@@ -176,7 +209,7 @@ int send_string(int socket, std::string string_to_send)
 	// Set send timeout on socket
 	struct timeval timeout;
 	timeout.tv_sec = 0;
-	timeout.tv_usec = 300;
+	timeout.tv_usec = 100;
 	if(setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, (char *) &timeout, sizeof(timeout)) < 0)
 	{
 		log_error(log_tag.c_str(), "Can't setsockopt on socket");
@@ -214,7 +247,7 @@ int send_string_with_split(int socket, std::string string_to_send, unsigned int 
 	// Set send timeout on socket
 	struct timeval timeout;
 	timeout.tv_sec = 0;
-	timeout.tv_usec = 300;
+	timeout.tv_usec = 100;
 	if(setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, (char *) &timeout, sizeof(timeout)) < 0)
 	{
 		log_error(log_tag.c_str(), "Can't setsockopt on socket");

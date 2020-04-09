@@ -4,7 +4,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "ru.evgeniy.dpitunnel"
-        minSdkVersion 19
+        minSdkVersion 17
         targetSdkVersion 28
         versionCode 9
         versionName "2.0"

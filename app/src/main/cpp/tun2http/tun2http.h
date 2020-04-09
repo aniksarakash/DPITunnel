@@ -35,7 +35,7 @@
 
 #define EPOLL_TIMEOUT 3600 // seconds
 #define EPOLL_EVENTS 20
-#define EPOLL_MIN_CHECK 200 // milliseconds
+#define EPOLL_MIN_CHECK 100 // milliseconds
 
 #define ICMP4_MAXMSG (IP_MAXPACKET - 20 - 8) // bytes (socket)
 #define ICMP6_MAXMSG (IPV6_MAXPACKET - 40 - 8) // bytes (socket)

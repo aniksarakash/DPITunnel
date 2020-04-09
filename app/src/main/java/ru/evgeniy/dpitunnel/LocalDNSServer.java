@@ -8,6 +8,11 @@ import android.util.Base64;
 import android.util.Log;
 
 import org.xbill.DNS.Message;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.RRset;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.Section;
+import org.xbill.DNS.Type;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -17,12 +22,17 @@ import java.net.InetAddress;
 import java.net.Proxy;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
 public class LocalDNSServer extends Thread {
 
     private String log_tag = "Java/LocalDNSServer";
+
+    private static Map<String, String> ipHostnameMap;
 
     private SharedPreferences prefs;
     private DatagramSocket serverSocket;
@@ -43,10 +53,15 @@ public class LocalDNSServer extends Thread {
             Log.e(log_tag, "Failed to create server socket");
             e.printStackTrace();
         }
+        ipHostnameMap = new HashMap<>();
     }
 
-    private byte[] makeDOHRequest(String doh_server_url, Message request)
-    {
+    public static String getHostname(String ip) {
+        String response = ipHostnameMap.get(ip);
+        return response != null ? response : "";
+    }
+
+    private byte[] makeDOHRequest(String doh_server_url, Message request) {
         String log_tag = "Java/LocalDNSServer/makeDOHReqst";
 
         byte[] response = null;
@@ -95,6 +110,37 @@ public class LocalDNSServer extends Thread {
             }
 
             response = result.toByteArray();
+
+            // Parse response and save hostname and ip for reverse dns lookup
+
+            String hostname = null;
+            String ip = null;
+            Message dns_response = new Message(result.toByteArray());
+            // Get list of RRset
+            List<RRset> rrset_list = dns_response.getSectionRRsets(Section.ANSWER);
+            // Try to find RRset with A type
+            for (RRset rrset : rrset_list)
+                if(rrset.getType() == Type.A){
+                    // Get all A records
+                    List<Record> records = rrset.rrs();
+                    for(Record record : records) {
+                        hostname = record.getName().toString(true);
+                        ip = record.rdataToString();
+                    }
+
+                    break;
+                }
+
+            if(hostname != null && ip != null) {
+                if(!ipHostnameMap.containsKey(ip)) {
+                    // Remove www. if need
+                    if(hostname.substring(0, 4).equals("www."))
+                        hostname = hostname.substring(4);
+
+                    // Put to HashMap
+                    ipHostnameMap.put(ip, hostname);
+                }
+            }
 
         } catch (Exception e) {
             Log.e(log_tag, "DoH request failed");
