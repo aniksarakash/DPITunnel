@@ -19,6 +19,11 @@
             android:summary="@string/socks5_summary"
             android:title="@string/socks5_title"
             android:defaultValue="false" />
+        <CheckBoxPreference
+            android:key="https_http_proxy"
+            android:summary="@string/http_proxy_summary"
+            android:title="@string/http_proxy_title"
+            android:defaultValue="false" />
 
     </PreferenceCategory>
 
@@ -80,6 +85,11 @@
             android:summary="@string/socks5_summary"
             android:title="@string/socks5_title"
             android:defaultValue="false" />
+        <CheckBoxPreference
+            android:key="http_http_proxy"
+            android:summary="@string/http_proxy_summary"
+            android:title="@string/http_proxy_title"
+            android:defaultValue="false" />
 
     </PreferenceCategory>
 
@@ -120,6 +130,11 @@
             android:dialogTitle="@string/other_socks5_title"
             android:key="other_socks5"
             android:title="@string/other_socks5_title"
+            android:defaultValue="address:port" />
+        <EditTextPreference
+            android:dialogTitle="@string/other_http_proxy_title"
+            android:key="other_http_proxy"
+            android:title="@string/other_http_proxy_title"
             android:defaultValue="address:port" />
         <EditTextPreference
             android:dialogTitle="@string/other_bind_port_title"

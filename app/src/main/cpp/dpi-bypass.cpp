@@ -36,6 +36,7 @@ struct
 		bool is_use_split;
 		unsigned int split_position;
 		bool is_use_socks5;
+        bool is_use_http_proxy;
 	} https;
 
 	struct
@@ -51,6 +52,7 @@ struct
 		bool is_add_newline_before_method;
 		bool is_use_unix_newline;
 		bool is_use_socks5;
+		bool is_use_http_proxy;
 	} http;
 
 	struct
@@ -64,6 +66,7 @@ struct
     {
         bool is_use_hostlist;
         std::string socks5_server;
+        std::string http_proxy_server;
         int bind_port;
         bool is_use_vpn;
     } other;
@@ -123,7 +126,7 @@ int recv_string(int socket, std::string & message)
     // Set receive timeout on socket
     struct timeval timeout;
     timeout.tv_sec = 0;
-    timeout.tv_usec = 100;
+    timeout.tv_usec = 500;
     if(setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout)) < 0)
     {
         std::cerr << "Can't setsockopt on socket" << std::endl;
@@ -204,6 +207,9 @@ int send_string(int socket, std::string string_to_send)
 {
     std::string log_tag = "CPP/send_string";
 
+    if(string_to_send.empty())
+        return 0;
+
 	size_t offset = 0;
 
 	// Set send timeout on socket
@@ -240,6 +246,9 @@ int send_string(int socket, std::string string_to_send)
 int send_string_with_split(int socket, std::string string_to_send, unsigned int split_position)
 {
     std::string log_tag = "CPP/send_string_with_split";
+
+    if(string_to_send.empty())
+        return 0;
 
 	FILE *write_socket = fdopen(socket, "w+");
 	size_t offset = 0;
@@ -456,8 +465,11 @@ int init_remote_server_socket(int & remote_server_socket, std::string remote_ser
 		return -1;
 	}
 
+    // Search in host list one time to save cpu time
+    bool hostlist_condition = Options.other.is_use_hostlist ? find_in_hostlist(remote_server_host) : true;
+
 	// Check if socks5 is need
-	if((Options.other.is_use_hostlist ? find_in_hostlist(remote_server_host) : true) && ((Options.https.is_use_socks5 && is_https) || (Options.http.is_use_socks5 && !is_https)))
+	if(hostlist_condition && ((Options.https.is_use_socks5 && is_https) || (Options.http.is_use_socks5 && !is_https)))
 	{
 		// Parse socks5 server string
 		size_t splitter_position = Options.other.socks5_server.find(':');
@@ -560,6 +572,68 @@ int init_remote_server_socket(int & remote_server_socket, std::string remote_ser
 			return -1;
 		}
 	}
+	// Check if HTTP proxy is need
+	else if(hostlist_condition && ((Options.https.is_use_http_proxy && is_https) || (Options.http.is_use_http_proxy && !is_https)))
+    {
+        // Parse http server string
+        size_t splitter_position = Options.other.http_proxy_server.find(':');
+        if(splitter_position == std::string::npos)
+        {
+            log_error(log_tag.c_str(), "Failed to parse HTTP server");
+        }
+        std::string proxy_ip = Options.other.http_proxy_server.substr(0, splitter_position);
+        std::string proxy_port = Options.other.http_proxy_server.substr(splitter_position + 1, Options.other.http_proxy_server.size() - splitter_position - 1);
+
+        // Add port and address
+        remote_server_address.sin_family = AF_INET;
+        remote_server_address.sin_port = htons(atoi(proxy_port.c_str()));
+
+        if(inet_pton(AF_INET, proxy_ip.c_str(), &remote_server_address.sin_addr) <= 0)
+        {
+            log_error(log_tag.c_str(), "Invalid proxy server ip address");
+            return -1;
+        }
+
+        // Connect to remote server
+        if(connect(remote_server_socket, (struct sockaddr *) &remote_server_address, sizeof(remote_server_address)) < 0)
+        {
+            log_error(log_tag.c_str(), "Can't connect to proxy server. Errno: %s", strerror(errno));
+            return -1;
+        }
+
+        // Ask proxy server to connect to remote host if we use https protocol
+        if(is_https)
+        {
+            std::string proxy_message_buffer = "CONNECT " + remote_server_ip +
+                                               ":" + std::to_string(remote_server_port) + " HTTP/1.1\r\n\r\n";
+
+            // Send CONNECT request
+            if(send_string(remote_server_socket, proxy_message_buffer) == -1)
+            {
+                log_error(log_tag.c_str(), "Failed to send connect packet to HTTP proxy server");
+                return -1;
+            }
+
+            // Receive reply
+            proxy_message_buffer.resize(0);
+            do
+            {
+                if(recv_string(remote_server_socket, proxy_message_buffer) == -1)
+                {
+                    log_error(log_tag.c_str(), "Failed to receive response from proxy server");
+                    return -1;
+                }
+            } while(proxy_message_buffer.empty());
+
+            // Check response code
+            size_t success_response_position = proxy_message_buffer.find("200");
+            if(success_response_position == std::string::npos)
+            {
+                log_error(log_tag.c_str(), "Proxy server failed to connect to remote host");
+                return -1;
+            }
+        }
+    }
 	else
 	{
 		// Add port and address
@@ -656,19 +730,23 @@ void modify_http_request(std::string & request, bool hostlist_condition)
 
 	if(request.empty()) return;
 
-	// First of all remove url in first string of request
-	std::string regex_string = "(https?://)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[-a-z0-9]{2,16}(:[0-9]{1,5})?";
-	std::regex url_find_regex(regex_string);
-	std::smatch match;
-	if(std::regex_search(request, match, url_find_regex) == 0)
-	{
-		log_error(log_tag.c_str(), "Failed to remove url, while modifying request");
-		return;
-	}
+	// First of all remove url in first string of request if need
+	// We mustn't do it when user enabled "Use HTTP proxy" mode
+	if(!Options.http.is_use_http_proxy)
+    {
+        std::string regex_string = "(https?://)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[-a-z0-9]{2,16}(:[0-9]{1,5})?";
+        std::regex url_find_regex(regex_string);
+        std::smatch match;
+        if(std::regex_search(request, match, url_find_regex) == 0)
+        {
+            log_error(log_tag.c_str(), "Failed to remove url, while modifying request");
+            return;
+        }
 
-	// Get string from regex output
-	std::string found_url = match.str(0);
-	request.replace(request.find(found_url), found_url.size(), "");
+        // Get string from regex output
+        std::string found_url = match.str(0);
+        request.replace(request.find(found_url), found_url.size(), "");
+    }
 
 	size_t host_header_position = request.find("Host:");
 	if(host_header_position == std::string::npos)
@@ -974,6 +1052,7 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_NativeService_init(J
     string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("https_split_position"), NULL);
     Options.https.split_position = atoi(env->GetStringUTFChars(string_object, 0));
     Options.https.is_use_socks5 = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("https_socks5"), false);
+    Options.https.is_use_http_proxy = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("https_http_proxy"), false);
 
     Options.http.is_use_split = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("http_split"), false);
     string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("http_split_position"), NULL);
@@ -988,6 +1067,7 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_NativeService_init(J
     Options.http.is_add_newline_before_method = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("http_newline_method"), false);
     Options.http.is_use_unix_newline = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("http_unix_newline"), false);
     Options.http.is_use_socks5 = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("http_socks5"), false);
+    Options.http.is_use_http_proxy = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("http_http_proxy"), false);
 
     Options.dns.is_use_doh = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("dns_doh"), false);
     Options.dns.is_use_doh_only_for_site_in_hostlist = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("dns_doh_hostlist"), false);
@@ -997,6 +1077,8 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_NativeService_init(J
     Options.other.is_use_hostlist = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("other_hostlist"), false);
     string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("other_socks5"), NULL);
     Options.other.socks5_server = env->GetStringUTFChars(string_object, 0);
+    string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("other_http_proxy"), NULL);
+    Options.other.http_proxy_server = env->GetStringUTFChars(string_object, 0);
     string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("other_bind_port"), NULL);
     Options.other.bind_port = atoi(env->GetStringUTFChars(string_object, 0));
 

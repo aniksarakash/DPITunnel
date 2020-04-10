@@ -50,4 +50,7 @@
     <string name="dns_doh_server_summary">You can enter several DoH servers by entering them from a new line</string>
     <string name="other_proxy_vpn_title">Set global proxy with VPN</string>
     <string name="other_proxy_vpn_summary">Set DPITunnel proxy with VpnService (requires android 5 and high)</string>
+    <string name="http_proxy_title">Use HTTP proxy</string>
+    <string name="http_proxy_summary">If this option is enabled, requests to the server go through a HTTP proxy</string>
+    <string name="other_http_proxy_title">HTTP proxy address</string>
 </resources>

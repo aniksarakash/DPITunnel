@@ -49,4 +49,7 @@
     <string name="dns_doh_server_summary">Вы можете ввести несколько DoH серверов, вводя их с новой строки</string>
     <string name="other_proxy_vpn_title">Установить глобальный прокси с VPN</string>
     <string name="other_proxy_vpn_summary">Устанавливает DPITunnel прокси глобально с использованием VpnService (требует android 5 и старше)</string>
+    <string name="http_proxy_title">Использовать HTTP proxy</string>
+    <string name="http_proxy_summary">Если эта опция включена, запросы к серверу проходят через HTTP прокси</string>
+    <string name="other_http_proxy_title">Адрес HTTP прокси сервера</string>
 </resources>

@@ -48,4 +48,7 @@
     <string name="please_grant_permissions">Udziel wymaganych uprawnień. Aplikacja nie może bez nich działać.</string>
     <string name="other_proxy_vpn_title">Ustaw globalny serwer proxy za pomocą VPN</string>
     <string name="other_proxy_vpn_summary">Ustaw proxy DPITunnel za pomocą VpnService (wymaga Androida 5 i wyższych)</string>
+    <string name="http_proxy_title">Używaj proxy HTTP</string>
+    <string name="http_proxy_summary">Gdy ta opcja jest włączona, żądania przechodzą przez proxy HTTP</string>
+    <string name="other_http_proxy_title">Adres proxy HTTP</string>
 </resources>
