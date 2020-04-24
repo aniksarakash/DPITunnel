@@ -15,8 +15,9 @@ DPI Tunnel is an application for Android that uses various techniques to bypass 
 
 ## How to use
 
-Just open the application and press the on / off button, after the local http proxy will start on the port specified in the settings.
-You need to set this http proxy in the settings of your browser or system, or you can choose the "Set DPITunnel proxy globally" option in the settings and DPI Tunnel do it automatically (requires root). Also, if you do not want to set http proxy in the settings, just click &#127760; button and enter the address of the site you need in the mini-browser.
+If you have root enable "Set DPITunnel proxy globally" option in DPI Tunnel settings and press on/off button.\
+If you don't have root and your device has android >= 5 you need to just press on/off button.\
+If you don't have root and your device has old android version you need to manually fill system proxy settings. Host is 127.0.0.1. Port specifed in "DPI Tunnel port" option, default is 8080.\
 
 ## How it works
 
@@ -37,14 +38,14 @@ To bypass DPI we can send HTTPS request by parts, because MOST DPIs can't recons
 
 ###### HTTP
 
-There is a lot of methods.
-First, we can split request in packets.
+There is a lot of methods.\
+First, we can split request in packets.\
 Second, we can modify HTTP packet, because most DPIs can extract site address only from standard HTTP packet. For example: we can replace Host: header with hOsT: or replace DOS end of line with UNIX. Don't worry, this modifications shouldn't break any website as they're fully compatible with TCP and HTTP standards.
 
 ## Links
-[4PDA](https://4pda.ru/forum/index.php?showtopic=981039) (Russian forum)
-[F-Droid](https://f-droid.org/en/packages/ru.evgeniy.dpitunnel) (Open source app store)
-[Xda labs](https://labs.xda-developers.com/store/app/ru.evgeniy.dpitunnel) (Xda app store)
+[4PDA](https://4pda.ru/forum/index.php?showtopic=981039) (Russian forum)\
+[F-Droid](https://f-droid.org/en/packages/ru.evgeniy.dpitunnel) (Open source app store)\
+[Xda labs](https://labs.xda-developers.com/store/app/ru.evgeniy.dpitunnel) (Xda app store)\
 [@DPITunnelOFFICIAL](https://t.me/DPITunnelOFFICIAL) (Telegram group) You may ask for help there.
 
 ## License
