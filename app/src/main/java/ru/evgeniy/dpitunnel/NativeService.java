@@ -38,8 +38,9 @@ public class NativeService extends Service {
         createNotificationChannel();
 
         // Add intent to start activity on notification click
-        PendingIntent intent1 = PendingIntent.getActivity(this, 0,
-                new Intent(this, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent intent1 = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                intent1, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Build notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -50,7 +51,7 @@ public class NativeService extends Service {
                 .setStyle(new NotificationCompat.DecoratedCustomViewStyle());
 
         // Set intent
-        builder.setContentIntent(intent1);
+        builder.setContentIntent(pendingIntent);
 
         Notification notification = builder.build();
 
@@ -95,8 +96,9 @@ public class NativeService extends Service {
         createNotificationChannel();
 
         // Add intent to start activity on notification click
-        PendingIntent intent1 = PendingIntent.getActivity(this, 0,
-                new Intent(this, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent intent1 = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                intent1, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Build notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -107,7 +109,7 @@ public class NativeService extends Service {
                 .setStyle(new NotificationCompat.DecoratedCustomViewStyle());
 
         // Set intent
-        builder.setContentIntent(intent1);
+        builder.setContentIntent(pendingIntent);
 
         Notification notification = builder.build();
 

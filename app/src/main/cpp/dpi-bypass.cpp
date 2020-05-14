@@ -721,7 +721,7 @@ void proxy_https(int client_socket, std::string host, int port)
 			close(client_socket);
 			return;
 		}
-        }
+	}
 }
 
 void modify_http_request(std::string & request, bool hostlist_condition)
@@ -1159,7 +1159,8 @@ extern "C" JNIEXPORT void Java_ru_evgeniy_dpitunnel_NativeService_deInit(JNIEnv*
     std::string log_tag = "CPP/deInit";
 
     // Kill child processes
-	for (pid_t child_process : child_processes) {
+	for (pid_t child_process : child_processes)
+	{
 		kill(child_process, SIGKILL);
 	}
 

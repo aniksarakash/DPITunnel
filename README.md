@@ -17,7 +17,7 @@ DPI Tunnel is an application for Android that uses various techniques to bypass 
 
 If you have root enable "Set DPITunnel proxy globally" option in DPI Tunnel settings and press on/off button.\
 If you don't have root and your device has android >= 5 you need to just press on/off button.\
-If you don't have root and your device has old android version you need to manually fill system proxy settings. Host is 127.0.0.1. Port specifed in "DPI Tunnel port" option, default is 8080.\
+If you don't have root and your device has old android version you need to manually fill system proxy settings. Host is 127.0.0.1. Port specifed in "DPI Tunnel port" option, default is 8080.
 
 ## How it works
 
