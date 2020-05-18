@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton browserButton;
     private Button updateHostlistButton;
     private TextView asciiLogo;
+    private static boolean isOnBoot;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +62,9 @@ public class MainActivity extends AppCompatActivity {
             editor.putBoolean("firstTimeFlag", true);
             editor.commit();
         }
+
+        // Check is activity started from BootReceiver
+        isOnBoot = getIntent().getBooleanExtra("ON_BOOT", false);
 
         // Find layout elements
         mainButton = findViewById(R.id.main_button);
@@ -108,6 +112,15 @@ public class MainActivity extends AppCompatActivity {
                     asciiLogo.setText(R.string.app_ascii_logo_unlock);
                     asciiLogo.setTextColor(getResources().getColor(R.color.colorAccent));
                     mainButton.setText(R.string.on);
+
+                    // Close activity if it started from BootReceiver
+                    if(isOnBoot) {
+                        MainActivity.isOnBoot = false;
+
+                        Intent intent1 = new Intent(Intent.ACTION_MAIN);
+                        intent1.addCategory(Intent.CATEGORY_HOME);
+                        startActivity(intent1);
+                    }
                 }
             }
         }, updateState);
@@ -165,6 +178,11 @@ public class MainActivity extends AppCompatActivity {
                 updateHostlist();
             }
         });
+
+        // Automatically start on boot if need
+        if(isOnBoot) {
+            mainButton.performClick();
+        }
     }
 
     private void stopVpn() {

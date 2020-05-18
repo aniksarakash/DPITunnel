@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name" translatable="false">DPI Tunnel</string>
     <string name="on">WYŁĄCZONE</string>
     <string name="off">WŁĄCZONE</string>
     <string name="port">Port:</string>
@@ -51,4 +50,6 @@
     <string name="http_proxy_title">Używaj proxy HTTP</string>
     <string name="http_proxy_summary">Gdy ta opcja jest włączona, żądania przechodzą przez proxy HTTP</string>
     <string name="other_http_proxy_title">Adres proxy HTTP</string>
+    <string name="other_start_on_boot_title">Uruchom usługę przy uruchomieniu systemu</string>
+    <string name="other_start_on_boot_summary">Uruchom usługę DPITunnel przy rozruchu systemu Android</string>
 </resources>

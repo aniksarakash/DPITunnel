@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">DPI Tunnel</string>
     <string name="on">ВКЛ</string>
     <string name="off">ВЫКЛ</string>
     <string name="port">Порт:</string>
@@ -52,4 +51,6 @@
     <string name="http_proxy_title">Использовать HTTP proxy</string>
     <string name="http_proxy_summary">Если эта опция включена, запросы к серверу проходят через HTTP прокси</string>
     <string name="other_http_proxy_title">Адрес HTTP прокси сервера</string>
+    <string name="other_start_on_boot_title">Запускать сервис при загрузке системы</string>
+    <string name="other_start_on_boot_summary">Запускать сервис DPITunnel при загрузке Android</string>
 </resources>

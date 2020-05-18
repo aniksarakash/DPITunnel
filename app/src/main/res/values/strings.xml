@@ -53,4 +53,6 @@
     <string name="http_proxy_title">Use HTTP proxy</string>
     <string name="http_proxy_summary">If this option is enabled, requests to the server go through a HTTP proxy</string>
     <string name="other_http_proxy_title">HTTP proxy address</string>
+    <string name="other_start_on_boot_title">Start the service at boot system</string>
+    <string name="other_start_on_boot_summary">Launch DPITunnel service on Android boot</string>
 </resources>

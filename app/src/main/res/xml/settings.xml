@@ -154,6 +154,11 @@
             android:summary="@string/other_proxy_setting_summary"
             android:title="@string/other_proxy_setting_title"
             android:defaultValue="false" />
+        <CheckBoxPreference
+            android:key="other_start_on_boot"
+            android:summary="@string/other_start_on_boot_summary"
+            android:title="@string/other_start_on_boot_title"
+            android:defaultValue="true" />
 
     </PreferenceCategory>
 
