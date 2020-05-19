@@ -17,7 +17,11 @@ add_library( # Sets the name of the library.
         SHARED
 
         # Provides a relative path to your source file(s).
-        dpi-bypass.cpp)
+        dns.cpp
+        dpi-bypass.cpp
+        hostlist.cpp
+        packet.cpp
+        socket.cpp)
 
 add_library( # Sets the name of the library.
         tun2http
