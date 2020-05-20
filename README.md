@@ -21,7 +21,7 @@ If you don't have root and your device has old android version you need to manua
 
 ## How it works
 
-First of all, DPI Tunnel need to manipulate traffic to bypass DPI, so DPI Tunnel starts local http proxy server and you need to use it.
+DPITunnel for Android establishes a transparent proxy server on your phone and starts local VPN server, that forwards your traffic into the proxy server, where are DPI circumvention tricks applying.
 
 ### How DPI works and some methods to bypass it
 
