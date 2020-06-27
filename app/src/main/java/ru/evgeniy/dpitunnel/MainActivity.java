@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else {
             asciiLogo.setText(R.string.app_ascii_logo_lock);
-            asciiLogo.setTextColor(Color.BLACK);
+            asciiLogo.setTextColor(getResources().getColor(R.color.textColor));
             mainButton.setText(R.string.off);
         }
 
