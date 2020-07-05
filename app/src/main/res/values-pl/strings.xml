@@ -35,8 +35,8 @@
     <string name="other_socks5_title">Adres proxy SOCKS5</string>
     <string name="other_bind_port_title">Port DPITunnel</string>
     <string name="other_bind_port_summary">Wskazuje port, na którym lokalny serwer proxy HTTP DPITunnel ma działać</string>
-    <string name="other_proxy_setting_title">Aplikuj proxy DPITunnel globalnie</string>
-    <string name="other_proxy_setting_summary">Aplikuj proxy DPITunnel globalnie automatycznie przy uruchomieniu systemu (wymaga uprawnień root)</string>
+    <string name="other_proxy_setting_title">Ustaw globalny serwer proxy za pomocą ROOT</string>
+    <string name="other_proxy_setting_summary">Ustaw DPITunnel proxy za pomocą ROOT (wymaga roota)</string>
     <string name="update_hostlist">Aktualizuj listę hostów</string>
     <string name="update_hostlist_ok">Lista hostów zaktualizowana pomyślnie</string>
     <string name="update_hostlist_bad">Wystąpił błąd podczas aktualizowania listy hostów</string>

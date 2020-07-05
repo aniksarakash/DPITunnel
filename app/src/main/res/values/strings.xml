@@ -37,8 +37,8 @@
     <string name="other_socks5_title">SOCKS5 proxy address</string>
     <string name="other_bind_port_title">DPITunnel port</string>
     <string name="other_bind_port_summary">Specifies the port on which the local HTTP proxy DPITunnel server is running</string>
-    <string name="other_proxy_setting_title">Set DPITunnel proxy globally</string>
-    <string name="other_proxy_setting_summary">Set DPITunnel proxy global automatically on start (requires root)</string>
+    <string name="other_proxy_setting_title">Set global proxy with ROOT</string>
+    <string name="other_proxy_setting_summary">Set DPITunnel proxy with ROOT (requires root)</string>
     <string name="update_hostlist">Update hostlist</string>
     <string name="update_hostlist_ok">Hostlist updated successfully</string>
     <string name="update_hostlist_bad">There was an error while updating hostlist</string>

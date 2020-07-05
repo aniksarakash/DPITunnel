@@ -35,8 +35,8 @@
     <string name="other_socks5_title">Адрес SOCKS5 прокси сервера</string>
     <string name="other_bind_port_title">Порт DPITunnel</string>
     <string name="other_bind_port_summary">Задает порт на котором работает локальный HTTP прокси сервер DPITunnel</string>
-    <string name="other_proxy_setting_title">"Установить DPITunnel прокси глобально "</string>
-    <string name="other_proxy_setting_summary">Устанавливает DPITunnel прокси глобально автоматически на старте (требует root)</string>
+    <string name="other_proxy_setting_title">Установить глобальный прокси с ROOT</string>
+    <string name="other_proxy_setting_summary">Устанавливает DPITunnel прокси глобально с использованием ROOT (требует root)</string>
     <string name="update_hostlist">Обновить hostlist</string>
     <string name="update_hostlist_ok">Hostlist успешно обновлен</string>
     <string name="update_hostlist_bad">Произошла ошибка во время обновления hostlist</string>
