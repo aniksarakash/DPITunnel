@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="hostlist_format_names_array">
+
+        <item>JSON</item>
+
+        <item>TXT</item>
+
+    </string-array>
+
+    <string-array name="hostlist_format_values_array">
+
+        <item>json</item>
+
+        <item>txt</item>
+
+    </string-array>
+</resources>

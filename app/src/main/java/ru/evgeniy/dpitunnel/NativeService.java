@@ -60,9 +60,6 @@ public class NativeService extends Service {
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-        // Set path to hostlist file
-        setHostlistPath(prefs.getString("other_hostlist_path", null));
-
         // Start native code
         nativeThread.start();
 
@@ -197,5 +194,4 @@ public class NativeService extends Service {
     public native int init(SharedPreferences prefs);
     public native void acceptClient();
     public native void deInit();
-    public native void setHostlistPath(String ApplicationDirectory);
 }

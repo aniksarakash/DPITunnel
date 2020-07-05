@@ -114,18 +114,36 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/other">
+    <PreferenceCategory android:title="@string/hostlist">
         <CheckBoxPreference
-            android:key="other_hostlist"
-            android:summary="@string/other_hostlist_summary"
-            android:title="@string/other_hostlist_title"
+            android:key="hostlist_enable"
+            android:summary="@string/hostlist_enable_summary"
+            android:title="@string/hostlist_enable_title"
             android:defaultValue="true" />
         <EditTextPreference
-            android:dialogTitle="@string/other_hostlist_path_title"
-            android:key="other_hostlist_path"
-            android:summary="@string/other_hostlist_path_summary"
-            android:title="@string/other_hostlist_path_title"
+            android:dialogTitle="@string/hostlist_path_title"
+            android:key="hostlist_path"
+            android:summary="@string/hostlist_path_summary"
+            android:title="@string/hostlist_path_title"
             android:defaultValue="/sdcard/hostlist.txt" />
+        <EditTextPreference
+            android:dialogTitle="@string/hostlist_source_title"
+            android:key="hostlist_source"
+            android:summary="@string/hostlist_source_summary"
+            android:title="@string/hostlist_source_title"
+            android:defaultValue="https://reestr.rublacklist.net/api/v2/domains/json" />
+        <ListPreference
+            android:dialogTitle="@string/hostlist_format_title"
+            android:key="hostlist_format"
+            android:summary="@string/hostlist_format_summary"
+            android:title="@string/hostlist_format_title"
+            android:defaultValue="json"
+            android:entries="@array/hostlist_format_names_array"
+            android:entryValues="@array/hostlist_format_values_array" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/other">
         <EditTextPreference
             android:dialogTitle="@string/other_socks5_title"
             android:key="other_socks5"

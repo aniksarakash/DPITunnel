@@ -30,8 +30,8 @@
     <string name="dns_doh_hostlist_title">Использовать DoH протокол только для сайтов в hostlist</string>
     <string name="dns_doh_hostlist_summary">Если эта опция включена, DoH протокол используется только для сайтов в hostlist (требует включения опций поддержки DoH протокола и hostlist)</string>
     <string name="dns_doh_server_title">Адреса DNS серверов</string>
-    <string name="other_hostlist_title">Использовать hostlist</string>
-    <string name="other_hostlist_summary">Если эта опция включена, методы обхода DPI применяются только для сайтов из списка (список находится в папке программы и обновляется кнопкой на главном экране)</string>
+    <string name="hostlist_enable_title">Использовать hostlist</string>
+    <string name="hostlist_enable_summary">Если эта опция включена, методы обхода DPI применяются только для сайтов из списка (список находится в папке программы и обновляется кнопкой на главном экране)</string>
     <string name="other_socks5_title">Адрес SOCKS5 прокси сервера</string>
     <string name="other_bind_port_title">Порт DPITunnel</string>
     <string name="other_bind_port_summary">Задает порт на котором работает локальный HTTP прокси сервер DPITunnel</string>
@@ -42,8 +42,8 @@
     <string name="update_hostlist_bad">Произошла ошибка во время обновления hostlist</string>
     <string name="please_run_service">Сервис DPI Tunnel не запущен. Пожалуйста, запустите его</string>
     <string name="service_is_running">DPITunnel работает...</string>
-    <string name="other_hostlist_path_title">Указать путь до hostlist файла</string>
-    <string name="other_hostlist_path_summary">Эта опция задает путь расположеия файла hostlist</string>
+    <string name="hostlist_path_title">Указать путь до hostlist файла</string>
+    <string name="hostlist_path_summary">Эта опция задает путь расположеия файла hostlist</string>
     <string name="please_grant_permissions">Пожалуйста, предоставьте необходимые разрешения. Приложение не может работать без них.</string>
     <string name="dns_doh_server_summary">Вы можете ввести несколько DoH серверов, вводя их с новой строки</string>
     <string name="other_proxy_vpn_title">Установить глобальный прокси с VPN</string>
@@ -53,4 +53,8 @@
     <string name="other_http_proxy_title">Адрес HTTP прокси сервера</string>
     <string name="other_start_on_boot_title">Запускать сервис при загрузке системы</string>
     <string name="other_start_on_boot_summary">Запускать сервис DPITunnel при загрузке Android</string>
+    <string name="hostlist_source_title">Источник загрузки hostlist файла</string>
+    <string name="hostlist_source_summary">Указывает откуда загружать hostlist файл</string>
+    <string name="hostlist_format_title">Формат hostlist файла</string>
+    <string name="hostlist_format_summary">Указывает формат hostlist файла</string>
 </resources>

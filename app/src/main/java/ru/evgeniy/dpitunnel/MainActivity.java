@@ -254,8 +254,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... values) {
             try {
-                FileOutputStream f = new FileOutputStream(prefs.getString("other_hostlist_path", null));
-                URL u = new URL("https://reestr.rublacklist.net/api/v2/domains/json");
+                FileOutputStream f = new FileOutputStream(prefs.getString("hostlist_path", null));
+                URL u = new URL(prefs.getString("hostlist_source", null));
                 HttpsURLConnection c = (HttpsURLConnection) u.openConnection();
 
                 // Create the SSL connection

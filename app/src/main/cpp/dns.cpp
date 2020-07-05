@@ -103,7 +103,7 @@ int resolve_host(std::string host, std::string & ip)
         return 0;
     }
 
-    if(settings.dns.is_use_doh && (settings.other.is_use_hostlist ? (settings.dns.is_use_doh_only_for_site_in_hostlist ? find_in_hostlist(host) : true) : true))
+    if(settings.dns.is_use_doh && (settings.hostlist.is_use_hostlist ? (settings.dns.is_use_doh_only_for_site_in_hostlist ? find_in_hostlist(host) : true) : true))
     {
         return resolve_host_over_doh(host, ip);
     }

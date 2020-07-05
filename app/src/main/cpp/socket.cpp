@@ -197,7 +197,7 @@ int init_remote_server_socket(int & remote_server_socket, std::string remote_ser
     }
 
     // Search in host list one time to save cpu time
-    bool hostlist_condition = settings.other.is_use_hostlist ? find_in_hostlist(remote_server_host) : true;
+    bool hostlist_condition = settings.hostlist.is_use_hostlist ? find_in_hostlist(remote_server_host) : true;
 
     // Check if socks5 is need
     if(hostlist_condition && ((settings.https.is_use_socks5 && is_https) || (settings.http.is_use_socks5 && !is_https)))

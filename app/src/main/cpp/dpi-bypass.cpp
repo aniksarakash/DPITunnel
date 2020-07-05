@@ -21,7 +21,7 @@ void proxy_https(int client_socket, std::string host, int port)
 	}
 
 	// Search in host list one time to save cpu time
-	bool hostlist_condition = settings.other.is_use_hostlist ? find_in_hostlist(host) : true;
+	bool hostlist_condition = settings.hostlist.is_use_hostlist ? find_in_hostlist(host) : true;
 
 	// Split only first https packet, what contains unencrypted sni
 	bool is_clienthello_request = true;
@@ -91,7 +91,7 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 	std::string first_response(8192, ' ');
 
 	// Search in host list one time to save cpu time
-	bool hostlist_condition = settings.other.is_use_hostlist ? find_in_hostlist(host) : true;
+	bool hostlist_condition = settings.hostlist.is_use_hostlist ? find_in_hostlist(host) : true;
 
 	// Modify http request to bypass dpi
 	modify_http_request(first_request, hostlist_condition);
@@ -288,7 +288,12 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_NativeService_init(J
     string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("dns_doh_server"), NULL);
     settings.dns.dns_doh_servers = env->GetStringUTFChars(string_object, 0);
 
-    settings.other.is_use_hostlist = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("other_hostlist"), false);
+    settings.hostlist.is_use_hostlist = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("hostlist_enable"), false);
+    string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("hostlist_path"), NULL);
+    settings.hostlist.hostlist_path = env->GetStringUTFChars(string_object, 0);
+	string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("hostlist_format"), NULL);
+	settings.hostlist.hostlist_format = env->GetStringUTFChars(string_object, 0);
+
     string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("other_socks5"), NULL);
     settings.other.socks5_server = env->GetStringUTFChars(string_object, 0);
     string_object = (jstring) env->CallObjectMethod(prefs_object, prefs_getString, env->NewStringUTF("other_http_proxy"), NULL);
@@ -299,7 +304,7 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_NativeService_init(J
     settings.other.is_use_vpn = env->CallBooleanMethod(prefs_object, prefs_getBool, env->NewStringUTF("other_vpn_setting"), false);
 
 	// Parse hostlist if need
-	if(settings.other.is_use_hostlist)
+	if(settings.hostlist.is_use_hostlist)
 	{
 		if(parse_hostlist() == -1)
 		{

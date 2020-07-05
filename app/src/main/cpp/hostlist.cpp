@@ -4,8 +4,7 @@
 extern struct Settings settings;
 extern JNIEnv* jni_env;
 
-rapidjson::Document hostlist_document;
-std::string hostlist_path;
+std::vector<std::string> hostlist_vector;
 
 bool find_in_hostlist(std::string host)
 {
@@ -45,10 +44,13 @@ bool find_in_hostlist(std::string host)
         }
     }
 
-    for(const auto & host_in_list : hostlist_document.GetArray())
-    {
-        if(host_in_list.GetString() == host) return 1;
-    }
+    for(std::string host_in_vector : hostlist_vector)
+        if(host_in_vector == host)
+        {
+            log_debug(log_tag.c_str(), "Found host in hostlist. %s, %s", host_in_vector.c_str(), host.c_str());
+            return 1;
+        }
+
     return 0;
 }
 
@@ -58,7 +60,7 @@ int parse_hostlist()
 
     // Open hostlist file
     std::ifstream hostlist_file;
-    hostlist_file.open(hostlist_path);
+    hostlist_file.open(settings.hostlist.hostlist_path);
     if(!hostlist_file)
     {
         log_error(log_tag.c_str(), "Failed to open hostlist file");
@@ -68,26 +70,34 @@ int parse_hostlist()
     // Create string object from hostlist file
     std::stringstream hostlist_stream;
     hostlist_stream << hostlist_file.rdbuf();
-    std::string hostlist_json = hostlist_stream.str();
+    std::string hostlist_string = hostlist_stream.str();
 
-    // Parse json object with rapidjson
-    if(hostlist_document.Parse(hostlist_json.c_str()).HasParseError())
+    // Parse hostlist file
+    if(settings.hostlist.hostlist_format == "json")
     {
-        log_error(log_tag.c_str(), "Failed to parse hostlist file");
-        return -1;
+        // Parse with rapidjson
+        rapidjson::Document hostlist_document;
+
+        if(hostlist_document.Parse(hostlist_string.c_str()).HasParseError())
+        {
+            log_error(log_tag.c_str(), "Failed to parse hostlist file");
+            return -1;
+        }
+
+        // Convert rapidjson::Document to vector<string>
+        hostlist_vector.reserve(hostlist_document.GetArray().Size());
+        for(const auto & host_in_list : hostlist_document.GetArray())
+            hostlist_vector.push_back(host_in_list.GetString());
+    }
+    else if(settings.hostlist.hostlist_format == "txt")
+    {
+        // Parse as text
+        char delimiter = '\n';
+        std::string host;
+        std::istringstream stream(hostlist_string);
+        while (std::getline(stream, host, delimiter))
+            hostlist_vector.push_back(host);
     }
 
     return 0;
-}
-
-extern "C" JNIEXPORT void JNICALL Java_ru_evgeniy_dpitunnel_NativeService_setHostlistPath(JNIEnv* env, jobject obj, jstring HostlistPath)
-{
-    if(!HostlistPath) return;
-
-    const char* hostlist_path_c = env->GetStringUTFChars(HostlistPath, NULL);
-    if (!hostlist_path_c) return;
-    const jsize len = env->GetStringUTFLength(HostlistPath);
-    hostlist_path = std::string(hostlist_path_c, len);
-
-    env->ReleaseStringUTFChars(HostlistPath, hostlist_path_c);
 }

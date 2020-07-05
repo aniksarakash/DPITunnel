@@ -60,6 +60,12 @@ struct Settings
     struct
     {
         bool is_use_hostlist;
+        std::string hostlist_path;
+        std::string hostlist_format;
+    } hostlist;
+
+    struct
+    {
         std::string socks5_server;
         std::string http_proxy_server;
         int bind_port;

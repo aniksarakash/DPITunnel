@@ -30,8 +30,8 @@
     <string name="dns_doh_hostlist_summary">Gdy ta opcja jest włączona, protokół DoH jest używany tylko dla stron w liście hostów (ta opcja wymaga włączenia opcji DoH i protokołu hostów)</string>
     <string name="dns_doh_server_title">Adresy serwerów DNS</string>
     <string name="dns_doh_server_summary">Możesz wprowadzić kilka serwerów DoH, wprowadzając je z nowej linii</string>
-    <string name="other_hostlist_title">Używaj listy hostów</string>
-    <string name="other_hostlist_summary">Gdy ta opcja jest włączona, metody obchodzenia DPI są używane tylko dla stron w liście hostów (lista zlokalizowana jest w folderze programu i jest aktualizowana przyciskiem na ekranie głównym)</string>
+    <string name="hostlist_enable_title">Używaj listy hostów</string>
+    <string name="hostlist_enable_summary">Gdy ta opcja jest włączona, metody obchodzenia DPI są używane tylko dla stron w liście hostów (lista zlokalizowana jest w folderze programu i jest aktualizowana przyciskiem na ekranie głównym)</string>
     <string name="other_socks5_title">Adres proxy SOCKS5</string>
     <string name="other_bind_port_title">Port DPITunnel</string>
     <string name="other_bind_port_summary">Wskazuje port, na którym lokalny serwer proxy HTTP DPITunnel ma działać</string>
@@ -42,8 +42,8 @@
     <string name="update_hostlist_bad">Wystąpił błąd podczas aktualizowania listy hostów</string>
     <string name="please_run_service">Usługa DPITunnel nie jest włączona. Prosimy ją włączyć</string>
     <string name="service_is_running">DPITunnel działa ...</string>
-    <string name="other_hostlist_path_title">Ustaw ścieżkę do pliku listy hostów</string>
-    <string name="other_hostlist_path_summary">Ta opcja ustawia ścieżkę do pliku listy hostów</string>
+    <string name="hostlist_path_title">Ustaw ścieżkę do pliku listy hostów</string>
+    <string name="hostlist_path_summary">Ta opcja ustawia ścieżkę do pliku listy hostów</string>
     <string name="please_grant_permissions">Udziel wymaganych uprawnień. Aplikacja nie może bez nich działać.</string>
     <string name="other_proxy_vpn_title">Ustaw globalny serwer proxy za pomocą VPN</string>
     <string name="other_proxy_vpn_summary">Ustaw proxy DPITunnel za pomocą VpnService (wymaga Androida 5 i wyższych)</string>
@@ -52,4 +52,8 @@
     <string name="other_http_proxy_title">Adres proxy HTTP</string>
     <string name="other_start_on_boot_title">Uruchom usługę przy uruchomieniu systemu</string>
     <string name="other_start_on_boot_summary">Uruchom usługę DPITunnel przy rozruchu systemu Android</string>
+    <string name="hostlist_source_title">Pobierz źródłowy plik listy hostów</string>
+    <string name="hostlist_source_summary">Wskazuje, gdzie pobrać plik listy hostów</string>
+    <string name="hostlist_format_title">Format pliku listy hostów</string>
+    <string name="hostlist_format_summary">Określa format pliku listy hostów</string>
 </resources>
