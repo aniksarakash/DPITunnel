@@ -3,20 +3,21 @@
 #include "hostlist.h"
 
 extern struct Settings settings;
-extern JNIEnv* jni_env;
+extern JavaVM* javaVm;
+extern jclass utils_class;
 
 int resolve_host_over_doh(std::string host, std::string & ip)
 {
     std::string log_tag = "CPP/resolve_host_over_doh";
 
     // Make request to DoH with Java code
-    // Find class
-    jclass utils_class = jni_env->FindClass("ru/evgeniy/dpitunnel/Utils");
-    if(utils_class == NULL)
-    {
-        log_error(log_tag.c_str(), "Failed to find Utils class");
-        return -1;
-    }
+
+    // Get JNIEnv
+    JNIEnv* jni_env;
+    javaVm->GetEnv((void**) &jni_env, JNI_VERSION_1_6);
+
+    // Attach JNIEnv
+    javaVm->AttachCurrentThread(&jni_env, NULL);
 
     // Find Java method
     jmethodID utils_make_doh_request = jni_env->GetStaticMethodID(utils_class, "makeDOHRequest", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");

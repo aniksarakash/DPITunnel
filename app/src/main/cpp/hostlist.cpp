@@ -2,7 +2,8 @@
 #include "hostlist.h"
 
 extern struct Settings settings;
-extern JNIEnv* jni_env;
+extern JavaVM* javaVm;
+extern jclass localdnsserver_class;
 
 std::vector<std::string> hostlist_vector;
 
@@ -18,13 +19,12 @@ bool find_in_hostlist(std::string host)
     int result = inet_pton(AF_INET, host.c_str(), &sa.sin_addr);
     if(settings.other.is_use_vpn && result != 0)
     {
-        // Find class
-        jclass localdnsserver_class = jni_env->FindClass("ru/evgeniy/dpitunnel/LocalDNSServer");
-        if(localdnsserver_class == NULL)
-        {
-            log_error(log_tag.c_str(), "Failed to find LocalDNSServer class");
-            return 0;
-        }
+        // Get JNIEnv
+        JNIEnv* jni_env;
+        javaVm->GetEnv((void**) &jni_env, JNI_VERSION_1_6);
+
+        // Attach JNIEnv
+        javaVm->AttachCurrentThread(&jni_env, NULL);
 
         // Find Java method
         jmethodID localdnsserver_get_hostname = jni_env->GetStaticMethodID(localdnsserver_class, "getHostname", "(Ljava/lang/String;)Ljava/lang/String;");
@@ -42,6 +42,9 @@ bool find_in_hostlist(std::string host)
             log_error(log_tag.c_str(), "Failed to find hostname to ip");
             return 0;
         }
+
+        // Detach thread
+        javaVm->DetachCurrentThread();
     }
 
     for(std::string host_in_vector : hostlist_vector)

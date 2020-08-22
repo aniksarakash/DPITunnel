@@ -5,11 +5,16 @@
 #include "socket.h"
 
 Settings settings;
-JNIEnv* jni_env;
+JavaVM* javaVm;
 
 std::string CONNECTION_ESTABLISHED_RESPONSE("HTTP/1.1 200 Connection established\r\n\r\n");
-std::vector<pid_t> child_processes;
+//std::vector<pid_t> child_processes;
+std::vector<std::thread> threads;
+bool stop_flag;
 int server_socket;
+
+jclass localdnsserver_class;
+jclass utils_class;
 
 void proxy_https(int client_socket, std::string host, int port)
 {
@@ -26,7 +31,7 @@ void proxy_https(int client_socket, std::string host, int port)
 	// Split only first https packet, what contains unencrypted sni
 	bool is_clienthello_request = true;
 
-	while(true)
+	while(!stop_flag)
 	{
 		std::string request(8192, ' ');
 		std::string response(8192, ' ');
@@ -130,7 +135,7 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 		return;
 	}
 
-	while(true)
+	while(!stop_flag)
 	{
 		std::string request(8192, ' ');
 		std::string response(8192, ' ');
@@ -231,10 +236,33 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_NativeService_init(J
     std::string log_tag = "CPP/init";
 
     // Store JavaVM globally
-    jni_env = env;
+    env->GetJavaVM(&javaVm);
 
-    // Clear child processes vector
-    child_processes.clear();
+    // Reset resources
+    threads.clear();
+    stop_flag = false;
+
+	jclass temp;
+
+	// Find LocalDNSServer class
+	temp = env->FindClass("ru/evgeniy/dpitunnel/LocalDNSServer");
+	if(temp == NULL)
+	{
+		log_error(log_tag.c_str(), "Failed to find LocalDNSServer class");
+		return -1;
+	}
+	// Store globally
+	localdnsserver_class = (jclass) env->NewGlobalRef(temp);
+
+	// Find Utils class
+	temp = env->FindClass("ru/evgeniy/dpitunnel/Utils");
+	if(temp == NULL)
+	{
+		log_error(log_tag.c_str(), "Failed to find Utils class");
+		return -1;
+	}
+	// Store globally
+	utils_class = (jclass) env->NewGlobalRef(temp);
 
     // Find SharedPreferences
     jclass prefs_class = env->FindClass("android/content/SharedPreferences");
@@ -363,25 +391,20 @@ extern "C" JNIEXPORT void Java_ru_evgeniy_dpitunnel_NativeService_acceptClient(J
         return;
     }
 
-    // Process client
-    pid_t child_process = fork();
-    child_processes.push_back(child_process);
-    if(child_process == 0)
-    {
-        process_client(client_socket);
-        exit(0);
-    }
+    // Create new thread
+    std::thread t1(process_client, client_socket);
+    threads.push_back(std::move(t1));
 }
 
 extern "C" JNIEXPORT void Java_ru_evgeniy_dpitunnel_NativeService_deInit(JNIEnv* env, jobject obj)
 {
     std::string log_tag = "CPP/deInit";
 
-    // Kill child processes
-	for (pid_t child_process : child_processes)
-	{
-		kill(child_process, SIGKILL);
-	}
+	// Stop all threads
+	stop_flag = true;
+	for(auto& t1 : threads)
+		if(t1.joinable())
+			t1.join();
 
     // Shutdown server socket
     if(shutdown(server_socket, SHUT_RDWR) == -1)
