@@ -124,8 +124,7 @@
             android:dialogTitle="@string/hostlist_path_title"
             android:key="hostlist_path"
             android:summary="@string/hostlist_path_summary"
-            android:title="@string/hostlist_path_title"
-            android:defaultValue="/sdcard/hostlist.txt" />
+            android:title="@string/hostlist_path_title" />
         <EditTextPreference
             android:dialogTitle="@string/hostlist_source_title"
             android:key="hostlist_source"

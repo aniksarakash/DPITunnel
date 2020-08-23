@@ -48,6 +48,9 @@ int resolve_host_over_doh(std::string host, std::string & ip)
         }
     }
 
+    // Detach thread
+    javaVm->DetachCurrentThread();
+
     if(!isOK)
     {
         log_error(log_tag.c_str(), "No request to the DoH servers was successful. Can't process client");

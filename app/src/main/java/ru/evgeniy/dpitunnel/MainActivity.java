@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
             // mark first time has ran.
             SharedPreferences.Editor editor = prefs.edit();
             editor.putBoolean("firstTimeFlag", true);
+            editor.putString("hostlist_path", getFilesDir() + "/hostlist.txt");
             editor.commit();
         }
 

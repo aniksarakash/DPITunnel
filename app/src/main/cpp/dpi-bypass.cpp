@@ -33,8 +33,8 @@ void proxy_https(int client_socket, std::string host, int port)
 
 	while(!stop_flag)
 	{
-		std::string request(8192, ' ');
-		std::string response(8192, ' ');
+		std::string request(1024, ' ');
+		std::string response(1024, ' ');
 
 		if(recv_string(client_socket, request) == -1) // Receive request from client
 		{
@@ -93,7 +93,7 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 	}
 
 	// Process first request
-	std::string first_response(8192, ' ');
+	std::string first_response(1024, ' ');
 
 	// Search in host list one time to save cpu time
 	bool hostlist_condition = settings.hostlist.is_use_hostlist ? find_in_hostlist(host) : true;
@@ -137,8 +137,8 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 
 	while(!stop_flag)
 	{
-		std::string request(8192, ' ');
-		std::string response(8192, ' ');
+		std::string request(1024, ' ');
+		std::string response(1024, ' ');
 
 		if(recv_string(client_socket, request) == -1) // Receive request from client
 		{
@@ -190,7 +190,7 @@ void process_client(int client_socket)
 {
     std::string log_tag = "CPP/process_client";
 
-	std::string request(2048, ' ');
+	std::string request(1024, ' ');
 
 	// Receive with timeout
     struct timeval timeout;
