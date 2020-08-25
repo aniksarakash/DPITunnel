@@ -172,9 +172,7 @@ public class Tun2HttpVpnService extends VpnService {
         // Add list of allowed applications
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             try {
-                Set<String> disallow = new HashSet<>(Arrays.asList("ru.evgeniy.dpitunnel"));;
-                Log.d(TAG, "disallowed:" + disallow.size());
-                builder.addDisallowedApplication(Arrays.asList(disallow.toArray(new String[0])));
+                builder.addDisallowedApplication("ru.evgeniy.dpitunnel");
             } catch (PackageManager.NameNotFoundException e) {
                 Log.e(TAG, e.getMessage(), e);
             }
@@ -289,95 +287,6 @@ public class Tun2HttpVpnService extends VpnService {
 
         public Tun2HttpVpnService getService() {
             return Tun2HttpVpnService.this;
-        }
-    }
-
-    private class Builder extends VpnService.Builder {
-        private NetworkInfo networkInfo;
-        private int mtu;
-        private List<String> listAddress = new ArrayList<>();
-        private List<String> listRoute = new ArrayList<>();
-        private List<InetAddress> listDns = new ArrayList<>();
-
-        private Builder() {
-            super();
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            networkInfo = cm.getActiveNetworkInfo();
-        }
-
-        @Override
-        public VpnService.Builder setMtu(int mtu) {
-            this.mtu = mtu;
-            super.setMtu(mtu);
-            return this;
-        }
-
-        @Override
-        public Builder addAddress(String address, int prefixLength) {
-            listAddress.add(address + "/" + prefixLength);
-            super.addAddress(address, prefixLength);
-            return this;
-        }
-
-        @Override
-        public Builder addRoute(String address, int prefixLength) {
-            listRoute.add(address + "/" + prefixLength);
-            super.addRoute(address, prefixLength);
-            return this;
-        }
-
-        @Override
-        public Builder addDnsServer(InetAddress address) {
-            listDns.add(address);
-            super.addDnsServer(address);
-            return this;
-        }
-
-        public Builder addDisallowedApplication(List<String> packageList) throws PackageManager.NameNotFoundException {
-            for (String pkg : packageList) {
-                System.out.println("disallowed:" + pkg);
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-                    addDisallowedApplication(pkg);
-            }
-            return this;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            Builder other = (Builder) obj;
-
-            if (other == null)
-                return false;
-
-            if (this.networkInfo == null || other.networkInfo == null ||
-                    this.networkInfo.getType() != other.networkInfo.getType())
-                return false;
-
-            if (this.mtu != other.mtu)
-                return false;
-
-            if (this.listAddress.size() != other.listAddress.size())
-                return false;
-
-            if (this.listRoute.size() != other.listRoute.size())
-                return false;
-
-            if (this.listDns.size() != other.listDns.size())
-                return false;
-
-            for (String address : this.listAddress)
-                if (!other.listAddress.contains(address))
-                    return false;
-
-            for (String route : this.listRoute)
-                if (!other.listRoute.contains(route))
-                    return false;
-
-            for (InetAddress dns : this.listDns)
-                if (!other.listDns.contains(dns))
-                    return false;
-
-            return true;
         }
     }
 }

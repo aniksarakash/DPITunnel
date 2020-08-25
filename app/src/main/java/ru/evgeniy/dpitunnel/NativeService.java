@@ -120,7 +120,6 @@ public class NativeService extends Service {
     private class NativeThread extends Thread{
         String log_tag = "Java/NativeService/nativeThread";
 
-        volatile boolean isRunning = true;
         @Override
         public void run() {
             if(init(PreferenceManager.getDefaultSharedPreferences(NativeService.this)) == -1)
@@ -130,14 +129,10 @@ public class NativeService extends Service {
                 return;
             }
 
-            while(isRunning)
-            {
-                acceptClient();
-            }
+            acceptClientCycle();
         }
 
         public void quit() {
-            isRunning = false;
             deInit();
         }
     }
@@ -192,6 +187,6 @@ public class NativeService extends Service {
     }
 
     public native int init(SharedPreferences prefs);
-    public native void acceptClient();
+    public native void acceptClientCycle();
     public native void deInit();
 }

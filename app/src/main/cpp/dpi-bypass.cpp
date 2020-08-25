@@ -377,23 +377,26 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_NativeService_init(J
 	return 0;
 }
 
-extern "C" JNIEXPORT void Java_ru_evgeniy_dpitunnel_NativeService_acceptClient(JNIEnv* env, jobject obj)
+extern "C" JNIEXPORT void Java_ru_evgeniy_dpitunnel_NativeService_acceptClientCycle(JNIEnv* env, jobject obj)
 {
-    std::string log_tag = "CPP/acceptClient";
+    std::string log_tag = "CPP/acceptClientCycle";
 
-    //Accept client
-    int client_socket;
-    struct sockaddr_in client_address;
-    socklen_t client_address_size = sizeof(client_address);
-    if((client_socket = accept(server_socket, (sockaddr *) &client_address, &client_address_size)) < 0)
+    while(!stop_flag)
     {
-        log_error(log_tag.c_str(), "Can't accept client socket. Error: %s", std::strerror(errno));
-        return;
-    }
+        //Accept client
+        int client_socket;
+        struct sockaddr_in client_address;
+        socklen_t client_address_size = sizeof(client_address);
+        if((client_socket = accept(server_socket, (sockaddr *) &client_address, &client_address_size)) < 0)
+        {
+            log_error(log_tag.c_str(), "Can't accept client socket. Error: %s", std::strerror(errno));
+            return;
+        }
 
-    // Create new thread
-    std::thread t1(process_client, client_socket);
-    threads.push_back(std::move(t1));
+        // Create new thread
+        std::thread t1(process_client, client_socket);
+        threads.push_back(std::move(t1));
+    }
 }
 
 extern "C" JNIEXPORT void Java_ru_evgeniy_dpitunnel_NativeService_deInit(JNIEnv* env, jobject obj)
