@@ -51,3 +51,8 @@ Second, we can modify HTTP packet, because most DPIs can extract site address on
 ## License
 
 Licensed under the MIT license. See [LICENSE](https://github.com/zhenyolka/DPITunnel/blob/master/LICENSE "LICENSE").
+
+## Dependencies
+* [TunProxy](https://github.com/raise-isayan/TunProxy) - VPN server and traffic interceptor
+* [RapidJSON](https://github.com/Tencent/rapidjson) - JSON library. MIT
+* [android-vpnservice](https://github.com/mightofcode/android-vpnservice/blob/master/LICENSE) - android VPNService example. Apache License 2.0
