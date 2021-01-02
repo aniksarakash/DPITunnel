@@ -672,11 +672,12 @@ extern "C" JNIEXPORT void Java_ru_evgeniy_dpitunnel_service_NativeService_deInit
 {
     std::string log_tag = "CPP/deInit";
 
-    stop_flag = true;
-    // Interrupt poll()
-    std::string interrupt = "interrupt";
-    send(interrupt_pipe[1], interrupt.c_str(), interrupt.size(), 0);
 	// Stop all threads
+    stop_flag = true;
+    // Interrupt poll() by closing pipe
+    close(interrupt_pipe[0]);
+    close(interrupt_pipe[1]);
+	// Wait for all threads
 	for(auto& t1 : threads)
 		if(t1.joinable())
 			t1.join();
