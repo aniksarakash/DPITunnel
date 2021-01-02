@@ -43,11 +43,17 @@ int resolve_host_over_doh(std::string host, std::string & ip)
         jobject doh_server_jstring = jni_env->NewStringUTF(doh_server.c_str());
         jobject host_jstring = jni_env->NewStringUTF(host.c_str());
         response_string_object = (jstring) jni_env->CallStaticObjectMethod(utils_class, utils_make_doh_request, (jstring) doh_server_jstring, (jstring) host_jstring);
-        response_string = jni_env->GetStringUTFChars((jstring) response_string_object, 0);
+
+        const char * str = jni_env->GetStringUTFChars((jstring) response_string_object, 0);
+        response_string = std::string(str);
+        jni_env->ReleaseStringUTFChars((jstring) response_string_object, str);
 
         // Release doh_server and host strings
         jni_env->DeleteLocalRef(doh_server_jstring);
         jni_env->DeleteLocalRef(host_jstring);
+
+        // Release result string
+        jni_env->DeleteLocalRef(response_string_object);
 
         if(response_string.empty())
         {
@@ -56,13 +62,7 @@ int resolve_host_over_doh(std::string host, std::string & ip)
             isOK = true;
             break;
         }
-
-        // Release result string
-        jni_env->DeleteLocalRef(response_string_object);
     }
-
-    // Release result string
-    jni_env->DeleteLocalRef(response_string_object);
 
     // Detach thread
     javaVm->DetachCurrentThread();
@@ -171,7 +171,10 @@ int reverse_resolve_host(std::string & host)
         // Call Java method
         jobject host_jstring = jni_env->NewStringUTF(host.c_str());
         jobject response_string_object = (jstring) jni_env->CallStaticObjectMethod(localdnsserver_class, localdnsserver_get_hostname, (jstring) host_jstring);
-        std::string buffer = jni_env->GetStringUTFChars((jstring) response_string_object, 0);
+
+        const char * str = jni_env->GetStringUTFChars((jstring) response_string_object, 0);
+        std::string buffer(str);
+        jni_env->ReleaseStringUTFChars((jstring) response_string_object, str);
 
         jni_env->DeleteLocalRef(host_jstring);
 

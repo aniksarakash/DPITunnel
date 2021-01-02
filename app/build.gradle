@@ -7,8 +7,8 @@ android {
         applicationId "ru.evgeniy.dpitunnel"
         minSdkVersion 17
         targetSdkVersion 30
-        versionCode 12
-        versionName "3.0"
+        versionCode 13
+        versionName "4.0"
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         vectorDrawables.useSupportLibrary = true
         externalNativeBuild {
@@ -40,8 +40,8 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.preference:preference:1.1.1'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1'
-    implementation group: 'dnsjava', name: 'dnsjava', version: '3.0.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.2-native-mt'
+    implementation group: 'dnsjava', name: 'dnsjava', version: '3.3.1'
     implementation 'gun0912.ted:tedpermission:2.2.3'
     implementation 'com.github.AppIntro:AppIntro:6.0.0'
     testImplementation 'junit:junit:4.13.1'
