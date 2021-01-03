@@ -10,10 +10,6 @@ import android.net.Proxy;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import androidx.collection.ArrayMap;
-import androidx.appcompat.app.AppCompatActivity;
-import ru.evgeniy.dpitunnel.service.NativeService;
-
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -29,6 +25,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.collection.ArrayMap;
+import ru.evgeniy.dpitunnel.service.NativeService;
 
 public class BrowserActivity extends AppCompatActivity {
 

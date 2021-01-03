@@ -4,11 +4,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.VpnService;
 import android.preference.PreferenceManager;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 
 import org.xbill.DNS.Message;
-import org.xbill.DNS.Name;
 import org.xbill.DNS.RRset;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.Section;
@@ -23,8 +23,8 @@ import java.net.Proxy;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -34,7 +34,7 @@ public class LocalDNSServer extends Thread {
 
     private final String log_tag = "Java/LocalDNSServer";
 
-    private static Map<String, String> ipHostnameMap;
+    private static HashMap<String, HashSet<String>> ipHostnameMap;
 
     private SharedPreferences prefs;
     private DatagramSocket serverSocket;
@@ -47,20 +47,16 @@ public class LocalDNSServer extends Thread {
 
     LocalDNSServer(Context context) {
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        try {
-            VpnService vpnService = new VpnService();
-            serverSocket = new DatagramSocket(49150);
-            vpnService.protect(serverSocket);
-        } catch (Exception e) {
-            Log.e(log_tag, "Failed to create server socket");
-            e.printStackTrace();
-        }
         ipHostnameMap = new HashMap<>();
     }
 
     public static String getHostname(String ip) {
-        String response = ipHostnameMap.get(ip);
-        return response != null ? response : "";
+        if(ipHostnameMap.containsKey(ip))
+        {
+            HashSet<String> responseSet = ipHostnameMap.get(ip);
+            return TextUtils.join("|", responseSet);
+        }
+        return "";
     }
 
     private byte[] makeDOHRequest(String doh_server_url, Message request) {
@@ -70,6 +66,7 @@ public class LocalDNSServer extends Thread {
         try {
             // Encode DNS request to base64
             String dns_message_encoded = Base64.encodeToString(request.toWire(), Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
+            dns_message_encoded = dns_message_encoded.trim().replace('+', '-').replace('/', '_');
 
             System.setProperty("http.keepAlive", "false");
             System.setProperty("java.net.preferIPv4Stack" , "true");
@@ -81,7 +78,7 @@ public class LocalDNSServer extends Thread {
 
             // Append request
             String url_str;
-            if(doh_server_url.substring(doh_server_url.length() - 9).equals("dns-query"))
+            if(doh_server_url.endsWith("dns-query"))
                 url_str = doh_server_url + "?dns=" + dns_message_encoded;
             else
                 url_str = doh_server_url + "/?dns=" + dns_message_encoded;
@@ -134,13 +131,14 @@ public class LocalDNSServer extends Thread {
                 }
 
             if(hostname != null && ip != null) {
-                if(!ipHostnameMap.containsKey(ip)) {
-                    // Remove www. if need
-                    if(hostname.substring(0, 4).equals("www."))
-                        hostname = hostname.substring(4);
-                    // Put to map
-                    ipHostnameMap.put(ip, hostname);
-                }
+                if(!ipHostnameMap.containsKey(ip))
+                    ipHostnameMap.put(ip, new HashSet<>());
+
+                // Remove www. if need
+                if(hostname.startsWith("www."))
+                    hostname = hostname.substring(4);
+                // Put to map
+                ipHostnameMap.get(ip).add(hostname);
             }
 
         } catch (Exception e) {
@@ -153,6 +151,14 @@ public class LocalDNSServer extends Thread {
 
     @Override
     public void run() {
+        try {
+            VpnService vpnService = new VpnService();
+            serverSocket = new DatagramSocket(49150);
+            vpnService.protect(serverSocket);
+        } catch (Exception e) {
+            Log.e(log_tag, "Failed to create server socket");
+            e.printStackTrace();
+        }
         try {
             serverSocket.setSoTimeout(1000);
         } catch (Exception e) {

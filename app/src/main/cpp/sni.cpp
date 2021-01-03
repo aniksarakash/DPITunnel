@@ -131,7 +131,7 @@ int send_string_tls(int socket, TLSContext *context, const std::string & string_
     return 0;
 }
 
-SSL* init_tls_server_server(std::string & sni)
+SSL* init_tls_server_server(const std::string & sni_str, const std::vector<std::string> & sni_arr)
 {
     std::string log_tag = "CPP/init_tls_server_server";
 
@@ -144,7 +144,7 @@ SSL* init_tls_server_server(std::string & sni)
 
     // Generate certificates
     GeneratedCA certificate;
-    generate_ssl_cert(sni, certificate);
+    generate_ssl_cert(sni_str, sni_arr, certificate);
 
     // Load certificates
     tls_load_certificates(server_context,

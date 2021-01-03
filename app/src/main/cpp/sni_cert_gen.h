@@ -6,6 +6,6 @@ struct GeneratedCA
     std::string       private_key_pem;
 };
 
-int generate_ssl_cert(std::string sni, struct GeneratedCA & generatedCa);
+int generate_ssl_cert(const std::string & sni_str, const std::vector<std::string> & sni_arr, struct GeneratedCA & generatedCa);
 
 #endif //DPITUNNEL_SNI_CERT_GEN_H

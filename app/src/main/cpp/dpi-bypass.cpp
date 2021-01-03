@@ -40,10 +40,18 @@ void proxy_https(int client_socket, std::string host, int port)
 
 	// In VPN mode when connecting to https sites proxy server gets CONNECT requests with ip addresses
 	// So if we receive ip address we need to find hostname for it
-	reverse_resolve_host(host);
+	// Also in VPN mode there can be several hostnames on same host
+	std::string hosts_str = host;
+	reverse_resolve_host(hosts_str);
+	// Save first host
+	std::vector<std::string> hosts_arr;
+	char delimiter = '|';
+	std::istringstream stream(hosts_str);
+	while(std::getline(stream, host, delimiter))
+		hosts_arr.push_back(host);
 
 	// Search in host list one time to save cpu time
-	bool hostlist_condition = settings.hostlist.is_use_hostlist ? find_in_hostlist(host) : true;
+	bool hostlist_condition = settings.hostlist.is_use_hostlist ? find_in_hostlist(hosts_arr) : true;
 
 	// Connect to remote server
 	if(init_remote_server_socket(remote_server_socket, host, port, true, hostlist_condition) == -1)
@@ -70,7 +78,8 @@ void proxy_https(int client_socket, std::string host, int port)
 	if(settings.sni.is_use_sni_replace && hostlist_condition)
 	{
 		// Create server. It will decrypt client's traffic
-        server_server_context = init_tls_server_server(host);
+		// Here we need to pass all hostnames and generate one certificate for them
+        server_server_context = init_tls_server_server(hosts_str, hosts_arr);
         if(server_server_context == NULL)
         {
             SSL_CTX_free(server_server_context);

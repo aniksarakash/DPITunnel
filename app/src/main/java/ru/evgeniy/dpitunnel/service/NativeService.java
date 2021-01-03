@@ -10,13 +10,13 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import androidx.core.app.NotificationCompat;
-import ru.evgeniy.dpitunnel.MainActivity;
-import ru.evgeniy.dpitunnel.R;
-
 import android.util.Log;
 
 import java.io.DataOutputStream;
+
+import androidx.core.app.NotificationCompat;
+import ru.evgeniy.dpitunnel.MainActivity;
+import ru.evgeniy.dpitunnel.R;
 
 public class NativeService extends Service {
 

@@ -8,7 +8,10 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.evgeniy.dpitunnel.R
 import ru.evgeniy.dpitunnel.TutorialActivity
 import java.io.DataInputStream

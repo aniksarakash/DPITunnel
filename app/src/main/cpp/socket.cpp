@@ -198,7 +198,7 @@ int init_remote_server_socket(int & remote_server_socket, std::string & remote_s
 
     // First task is host resolving
     std::string remote_server_ip(50, ' ');
-    if(resolve_host(remote_server_host, remote_server_ip) == -1)
+    if(resolve_host(remote_server_host, remote_server_ip, hostlist_condition) == -1)
     {
         return -1;
     }

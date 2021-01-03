@@ -64,7 +64,7 @@ int add_ext(STACK_OF(X509_EXTENSION) *sk, int nid, const char *value) {
     return 1;
 }
 
-int generate_key_csr(EVP_PKEY **key, X509_REQ **req, std::string & REQ_DN_CN)
+int generate_key_csr(EVP_PKEY **key, X509_REQ **req, const std::vector<std::string> & sni_arr)
 {
     *key = NULL;
     *req = NULL;
@@ -141,7 +141,7 @@ int generate_key_csr(EVP_PKEY **key, X509_REQ **req, std::string & REQ_DN_CN)
     X509_NAME_add_entry_by_txt(name, "OU", MBSTRING_ASC,
                                reinterpret_cast<const unsigned char *>(REQ_DN_OU.c_str()), -1, -1, 0);
     X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
-                               reinterpret_cast<const unsigned char *>(REQ_DN_CN.c_str()), -1, -1, 0);
+                               reinterpret_cast<const unsigned char *>(sni_arr[0].c_str()), -1, -1, 0);
 
     /* Add alternative name
      * DON'T need. We add extensions, while sign certificate
@@ -204,11 +204,11 @@ int add_ext(X509 *cert, int nid, const char *value)
     return 1;
 }
 
-int generate_signed_key_pair(EVP_PKEY *ca_key, X509 *ca_crt, EVP_PKEY **key, X509 **crt, std::string & REQ_DN_CN)
+int generate_signed_key_pair(EVP_PKEY *ca_key, X509 *ca_crt, EVP_PKEY **key, X509 **crt, const std::vector<std::string> & sni_arr)
 {
     /* Generate the private key and corresponding CSR. */
     X509_REQ *req = NULL;
-    if (!generate_key_csr(key, &req, REQ_DN_CN)) {
+    if (!generate_key_csr(key, &req, sni_arr)) {
         fprintf(stderr, "Failed to generate key and/or CSR!");
         return 0;
     }
@@ -237,7 +237,13 @@ int generate_signed_key_pair(EVP_PKEY *ca_key, X509 *ca_crt, EVP_PKEY **key, X50
     X509_set_issuer_name(*crt, X509_get_subject_name(ca_crt));
 
     /* Add alternative name extensions */
-    add_ext(*crt, NID_subject_alt_name, ("DNS: " + REQ_DN_CN + ",DNS: *." + REQ_DN_CN).c_str());
+    std::string alternative_name;
+    for(const std::string& host : sni_arr)
+        alternative_name.append("DNS: ").append(host).append(",DNS: *.").append(host).append(",");
+    if (!alternative_name.empty())
+        alternative_name.pop_back();
+
+    add_ext(*crt, NID_subject_alt_name, alternative_name.c_str());
 
     /* Set validity of certificate to 2 years. */
     X509_gmtime_adj(X509_get_notBefore(*crt), 0);
@@ -299,12 +305,12 @@ int read_certs_from_file()
     return 0;
 }
 
-int generate_ssl_cert(std::string sni, struct GeneratedCA & generatedCa)
+int generate_ssl_cert(const std::string & sni_str, const std::vector<std::string> & sni_arr, struct GeneratedCA & generatedCa)
 {
     std::string log_tag = "CPP/generate_ssl_cert";
 
     // First of all, try to find certificate in cache
-    auto it = certCache.find(sni);
+    auto it = certCache.find(sni_str);
     if (it != certCache.end())
     {
         generatedCa = it->second;
@@ -328,7 +334,7 @@ int generate_ssl_cert(std::string sni, struct GeneratedCA & generatedCa)
     EVP_PKEY *key = NULL;
     X509 *crt = NULL;
 
-    int ret = generate_signed_key_pair(ca_key, ca_crt, &key, &crt, sni);
+    int ret = generate_signed_key_pair(ca_key, ca_crt, &key, &crt, sni_arr);
     if (!ret) {
         EVP_PKEY_free(ca_key);
         X509_free(ca_crt);
@@ -351,7 +357,7 @@ int generate_ssl_cert(std::string sni, struct GeneratedCA & generatedCa)
     generatedCa = cert;
 
     // Store cert in cache
-    certCache[sni] = cert;
+    certCache[sni_str] = cert;
 
     // Free stuff.
     EVP_PKEY_free(ca_key);

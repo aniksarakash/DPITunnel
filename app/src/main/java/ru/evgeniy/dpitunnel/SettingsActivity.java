@@ -2,10 +2,10 @@ package ru.evgeniy.dpitunnel;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.ImageButton;
+
 import androidx.appcompat.app.AppCompatActivity;
 import ru.evgeniy.dpitunnel.fragment.SettingsFragment;
-
-import android.widget.ImageButton;
 
 public class SettingsActivity extends AppCompatActivity {
 

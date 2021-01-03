@@ -3,10 +3,10 @@
 
 extern struct Settings settings;
 
-int parse_request(std::string request, std::string & method, std::string & host, int & port)
+int parse_request(const std::string& request, std::string & method, std::string & host, int & port)
 {
     // Extract method
-    size_t method_end_position = request.find(" ");
+    size_t method_end_position = request.find(' ');
     if(method_end_position == std::string::npos)
     {
         return -1;
@@ -34,7 +34,7 @@ int parse_request(std::string request, std::string & method, std::string & host,
     }
 
     // Check if port exists
-    size_t port_start_position = found_url.find(":");
+    size_t port_start_position = found_url.find(':');
     if(port_start_position == std::string::npos)
     {
         // If no set deafult port
@@ -123,7 +123,7 @@ void modify_http_request(std::string & request, bool hostlist_condition)
         request.erase(host_header_position + 5, 1);
     }
 
-    size_t method_end_position = request.find(" ");
+    size_t method_end_position = request.find(' ');
 
     // Add space after method if need
     if(hostlist_condition && settings.http.is_add_space_after_method)

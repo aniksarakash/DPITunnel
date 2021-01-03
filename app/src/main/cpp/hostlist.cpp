@@ -7,7 +7,7 @@ extern struct Settings settings;
 
 std::vector<std::string> hostlist_vector;
 
-bool find_in_hostlist(std::string host) // string_host used to store domain of remote server, because host can contain IP in VPN mode
+bool find_in_hostlist(const std::string & host) // string_host used to store domain of remote server, because host can contain IP in VPN mode
 {
     std::string log_tag = "CPP/find_in_hostlist";
 
@@ -15,10 +15,25 @@ bool find_in_hostlist(std::string host) // string_host used to store domain of r
         if(host_in_vector == host)
         {
             log_debug(log_tag.c_str(), "Found host in hostlist. %s, %s", host_in_vector.c_str(), host.c_str());
-            return 1;
+            return true;
         }
 
-    return 0;
+    return false;
+}
+
+bool find_in_hostlist(const std::vector<std::string>& host_arr) // string_host used to store domain of remote server, because host can contain IP in VPN mode
+{
+    std::string log_tag = "CPP/find_in_hostlist";
+
+    for(const std::string& host : host_arr)
+        for(const std::string& host_in_vector : hostlist_vector)
+            if(host_in_vector == host)
+            {
+                log_debug(log_tag.c_str(), "Found host in hostlist. %s, %s", host_in_vector.c_str(), host.c_str());
+                return true;
+            }
+
+    return false;
 }
 
 int parse_hostlist()

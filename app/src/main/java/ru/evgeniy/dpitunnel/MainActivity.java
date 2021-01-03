@@ -12,11 +12,6 @@ import android.graphics.Color;
 import android.net.VpnService;
 import android.os.AsyncTask;
 import android.os.Build;
-import androidx.preference.PreferenceManager;
-import androidx.appcompat.app.AppCompatActivity;
-import ru.evgeniy.dpitunnel.service.NativeService;
-import ru.evgeniy.dpitunnel.service.Tun2HttpVpnService;
-
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -42,6 +37,11 @@ import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceManager;
+import ru.evgeniy.dpitunnel.service.NativeService;
+import ru.evgeniy.dpitunnel.service.Tun2HttpVpnService;
 
 public class MainActivity extends AppCompatActivity {
     private final String log_tag = "Java/MainActivity";
