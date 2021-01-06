@@ -198,7 +198,7 @@ public class LocalDNSServer extends Thread {
                 packet = new DatagramPacket(response, response.length, clientAddress, clientPort);
                 serverSocket.send(packet);
             } catch (SocketTimeoutException e) {
-
+                continue;
             } catch (Exception e) {
                 Log.e(log_tag, "Failed to process request");
                 e.printStackTrace();

@@ -495,6 +495,7 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_service_NativeServic
     }
 
     // Fill settings
+    const char * str;
     jobject string_object;
     jobject string_object1;
 
@@ -505,7 +506,7 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_service_NativeServic
 
     string_object1 = env->NewStringUTF("https_split_position");
     string_object = env->CallObjectMethod(prefs_object, prefs_getString, (jstring) string_object1, NULL);
-    settings.https.split_position = (unsigned int) atoi(env->GetStringUTFChars((jstring) string_object, 0));
+    settings.https.split_position = (unsigned int) atoi((const char *) env->GetStringUTFChars((jstring) string_object, 0));
     env->DeleteLocalRef(string_object1);
     env->DeleteLocalRef(string_object);
 
@@ -524,7 +525,8 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_service_NativeServic
 
     string_object1 =  env->NewStringUTF("sni_spell");
     string_object = env->CallObjectMethod(prefs_object, prefs_getString, (jstring) string_object1, NULL);
-    settings.sni.sni_spell = env->GetStringUTFChars((jstring) string_object, 0);
+    str = env->GetStringUTFChars((jstring) string_object, 0);
+    settings.sni.sni_spell = std::string(str);
     env->DeleteLocalRef(string_object1);
     env->DeleteLocalRef(string_object);
 
@@ -535,7 +537,7 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_service_NativeServic
 
     string_object1 = env->NewStringUTF("http_split_position");
     string_object = env->CallObjectMethod(prefs_object, prefs_getString, string_object1, NULL);
-    settings.http.split_position = (unsigned int) atoi(env->GetStringUTFChars((jstring) string_object, 0));
+    settings.http.split_position = (unsigned int) atoi((const char *) env->GetStringUTFChars((jstring) string_object, 0));
     env->DeleteLocalRef(string_object1);
     env->DeleteLocalRef(string_object);
 
@@ -545,7 +547,8 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_service_NativeServic
 
     string_object1 = env->NewStringUTF("http_header_spell");
     string_object = env->CallObjectMethod(prefs_object, prefs_getString, (jstring) string_object1, NULL);
-    settings.http.host_header = env->GetStringUTFChars((jstring) string_object, 0);
+    str = env->GetStringUTFChars((jstring) string_object, 0);
+    settings.http.host_header = std::string(str);
     env->DeleteLocalRef(string_object1);
     env->DeleteLocalRef(string_object);
 
@@ -592,7 +595,8 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_service_NativeServic
 
     string_object1 = env->NewStringUTF("dns_doh_server");
     string_object = env->CallObjectMethod(prefs_object, prefs_getString, (jstring) string_object1, NULL);
-    settings.dns.dns_doh_servers = env->GetStringUTFChars((jstring) string_object, 0);
+    str = env->GetStringUTFChars((jstring) string_object, 0);
+    settings.dns.dns_doh_servers = std::string(str);
     env->DeleteLocalRef(string_object1);
     env->DeleteLocalRef(string_object);
 
@@ -603,32 +607,36 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_service_NativeServic
 
     string_object1 = env->NewStringUTF("hostlist_path");
     string_object = env->CallObjectMethod(prefs_object, prefs_getString, (jstring) string_object1, NULL);
-    settings.hostlist.hostlist_path = env->GetStringUTFChars((jstring) string_object, 0);
+    str = env->GetStringUTFChars((jstring) string_object, 0);
+    settings.hostlist.hostlist_path = std::string(str);
     env->DeleteLocalRef(string_object1);
     env->DeleteLocalRef(string_object);
 
     string_object1 = env->NewStringUTF("hostlist_format");
 	string_object = env->CallObjectMethod(prefs_object, prefs_getString, (jstring) string_object1, NULL);
-	settings.hostlist.hostlist_format = env->GetStringUTFChars((jstring) string_object, 0);
+	str = env->GetStringUTFChars((jstring) string_object, 0);
+	settings.hostlist.hostlist_format = std::string(str);
     env->DeleteLocalRef(string_object1);
     env->DeleteLocalRef(string_object);
 
     // Other options
     string_object1 = env->NewStringUTF("other_socks5");
     string_object = env->CallObjectMethod(prefs_object, prefs_getString, (jstring) string_object1, NULL);
-    settings.other.socks5_server = env->GetStringUTFChars((jstring) string_object, 0);
+    str = env->GetStringUTFChars((jstring) string_object, 0);
+    settings.other.socks5_server = std::string(str);
     env->DeleteLocalRef(string_object1);
     env->DeleteLocalRef(string_object);
 
     string_object1 = env->NewStringUTF("other_http_proxy");
     string_object = env->CallObjectMethod(prefs_object, prefs_getString, (jstring) string_object1, NULL);
-    settings.other.http_proxy_server = env->GetStringUTFChars((jstring) string_object, 0);
+    str = env->GetStringUTFChars((jstring) string_object, 0);
+    settings.other.http_proxy_server = std::string(str);
     env->DeleteLocalRef(string_object1);
     env->DeleteLocalRef(string_object);
 
     string_object1 = env->NewStringUTF("other_bind_port");
     string_object = env->CallObjectMethod(prefs_object, prefs_getString, (jstring) string_object1, NULL);
-    settings.other.bind_port = atoi(env->GetStringUTFChars((jstring) string_object, 0));
+    settings.other.bind_port = atoi((const char *) env->GetStringUTFChars((jstring) string_object, 0));
     env->DeleteLocalRef(string_object1);
     env->DeleteLocalRef(string_object);
 
@@ -636,7 +644,8 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_service_NativeServic
     settings.other.is_use_vpn = env->CallBooleanMethod(prefs_object, prefs_getBool, (jstring) string_object1, false);
     env->DeleteLocalRef(string_object1);
 
-    settings.app_files_dir = env->GetStringUTFChars(app_files_path, 0);
+    str = env->GetStringUTFChars(app_files_path, 0);
+    settings.app_files_dir = std::string(str);
 
 	// Parse hostlist if need
 	if(settings.hostlist.is_use_hostlist)

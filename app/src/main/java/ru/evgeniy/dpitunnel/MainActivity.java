@@ -323,13 +323,9 @@ public class MainActivity extends AppCompatActivity {
                 HttpsURLConnection c = (HttpsURLConnection) u.openConnection();
 
                 // Create the SSL connection
-                SSLContext sc;
-                sc = SSLContext.getInstance("TLS");
-                sc.init(null, null, new java.security.SecureRandom());
-                c.setSSLSocketFactory(sc.getSocketFactory());
+                c.setSSLSocketFactory(new NoSSLv3SocketFactory());
 
                 // Set options and connect
-                c.setReadTimeout(700);
                 c.setConnectTimeout(700);
                 c.setRequestMethod("GET");
                 c.setDoInput(true);

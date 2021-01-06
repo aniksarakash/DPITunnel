@@ -23,7 +23,9 @@ class TutorialActivity : AppIntro() {
                 backgroundColor = ContextCompat.getColor(applicationContext, R.color.colorAccent)))
 
         // Root slide
-        addSlide(RootSlide())
+        // Show it only on android <= 4.4 KITKAT
+        if(android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.KITKAT)
+            addSlide(RootSlide())
 
         // SNI slide
         addSlide(SNISlide())

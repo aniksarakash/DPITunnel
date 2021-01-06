@@ -66,9 +66,9 @@
     <string name="github_link">Репозиторий DPITunnel на <a href="https://github.com/zhenyolka/DPITunnel">GitHub</a></string>
     <string name="open_tutorial_again">просмотреть инструкцию заново</string>
     <string name="about_dpitunnel">DPI Tunnel - это приложение, которое изменяет ваш трафик, чтобы обойти DPI и предоставить вам свободный доступ к информации.\nP.S. Пожалуйста, не пропускайте этот обучающий экран.</string>
-    <string name="root_slide_text">DPI Tunnel может работать без root прав с помощью VpnService API, но используя root права, можно улучшить стабильность и повысить эффективность. Если у вас есть root права, пожалуйста, предоставьте их.</string>
     <string name="grant_root_rights">Предоставить рут права</string>
     <string name="grant_root_rights_fail">Произошла ошибка при получении рут прав</string>
     <string name="grant_root_rights_success">Рут права удачно получены</string>
     <string name="sni_slide_text">Если вы хотите использовать опцию подмены SNI, для комфортной работы вам необходимо установить <a href="https://github.com/zhenyolka/DPITunnel/blob/master/app/src/main/assets/rootCA.crt">этот</a> SSL сертификат. Для этого скачайте его, откройте настройки устройства. Откройте безопасность->шифрование и учетные данные->установка с SD-карты. Выбирете загруженный сертификат и установите его. Не переживайте о безопасности данных, так как они обрабатываются локально.</string>
+    <string name="root_slide_text">DPI Tunnel обнаружил, что ваша версия Android ниже, чем Android 5. Это означает, что DPI Tunnel может работать только с правами root на вашем телефоне. Пожалуйста, предоставьте их.</string>
 </resources>
