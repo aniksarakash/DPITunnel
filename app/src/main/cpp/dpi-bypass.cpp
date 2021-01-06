@@ -10,7 +10,6 @@ JavaVM* javaVm;
 
 const std::string CONNECTION_ESTABLISHED_RESPONSE("HTTP/1.1 200 Connection established\r\n\r\n");
 const std::string SNI_REPLACE_VARIABLE("${SNI}");
-//std::vector<pid_t> child_processes;
 std::vector<std::thread> threads;
 bool stop_flag;
 int server_socket;
@@ -71,6 +70,16 @@ void proxy_https(int client_socket, std::string host, int port)
 		log_error(log_tag.c_str(), "Can't setsockopt on socket");
 		return;
 	}
+
+	// Disable TCP Nagle's algorithm
+	int yes = 1;
+    if(setsockopt(client_socket, IPPROTO_TCP, TCP_NODELAY, (char *) &yes, sizeof(yes)) < 0
+    || setsockopt(remote_server_socket, IPPROTO_TCP, TCP_NODELAY, (char *) &yes, sizeof(yes)) < 0)
+    {
+        log_error(log_tag.c_str(), "Can't setsockopt on socket");
+        return;
+    }
+
 	// Init tlse if SNI replace enabled
 	struct TLSContext *server_server_context;
 	struct TLSContext *server_client_context;
@@ -138,6 +147,9 @@ void proxy_https(int client_socket, std::string host, int port)
 
 	bool is_first_time = true;
 
+	// last_char indicates position of string end
+	unsigned int last_char;
+
 	while (!stop_flag)
 	{
 		int ret = poll(fds, 3, timeout);
@@ -156,6 +168,7 @@ void proxy_https(int client_socket, std::string host, int port)
 			   fds[0].revents & POLLHUP || fds[1].revents & POLLHUP ||
 			   fds[0].revents & POLLNVAL || fds[1].revents & POLLNVAL)
 				break;
+
 			// Process client socket
 			if (fds[0].revents & POLLIN)
 			{
@@ -164,31 +177,31 @@ void proxy_https(int client_socket, std::string host, int port)
 				// Transfer data
 				if(settings.sni.is_use_sni_replace && hostlist_condition)
 				{
-				    if (recv_string_tls(client_socket, server_client_context, buffer) ==
+				    if (recv_string_tls(client_socket, server_client_context, buffer, last_char) ==
 				        -1) // Receive request from client
 				        break;
 
 
-					if (send_string_tls(remote_server_socket, client_context, buffer) ==
+					if (send_string_tls(remote_server_socket, client_context, buffer, last_char) ==
 						-1) // Send request to server
 						break;
 				}
 				else
 				{
-					if(recv_string(client_socket, buffer) == -1) // Receive request from client
+					if(recv_string(client_socket, buffer, last_char) == -1) // Receive request from client
 						break;
 
 					// Check if split is need
 					if(hostlist_condition && settings.https.is_use_split && is_clienthello_request)
 					{
-						if(send_string(remote_server_socket, buffer, settings.https.split_position) == -1) // Send request to server
+						if(send_string(remote_server_socket, buffer, settings.https.split_position, last_char) == -1) // Send request to server
 							break;
 						// VPN mode specific
 						// VPN mode requires splitting for all packets
 						is_clienthello_request = settings.other.is_use_vpn;
 					}
 					else
-						if(send_string(remote_server_socket, buffer) == -1) // Send request to server
+						if(send_string(remote_server_socket, buffer, last_char) == -1) // Send request to server
 							break;
 				}
 			}
@@ -201,18 +214,18 @@ void proxy_https(int client_socket, std::string host, int port)
 				// Transfer data
 				if(settings.sni.is_use_sni_replace && hostlist_condition)
 				{
-					if (recv_string_tls(remote_server_socket, client_context, buffer) ==
+					if (recv_string_tls(remote_server_socket, client_context, buffer, last_char) ==
 						-1) // Receive response from server
 						break;
-					if (send_string_tls(client_socket, server_client_context, buffer) ==
+					if (send_string_tls(client_socket, server_client_context, buffer, last_char) ==
 						-1)  // Send response to client
 						break;
 				}
 				else
 				{
-					if(recv_string(remote_server_socket, buffer) == -1) // Receive response from server
+					if(recv_string(remote_server_socket, buffer, last_char) == -1) // Receive response from server
 						break;
-					if(send_string(client_socket, buffer) == -1) // Send response to client
+					if(send_string(client_socket, buffer, last_char) == -1) // Send response to client
 						break;
 				}
 			}
@@ -257,13 +270,25 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 		return;
 	}
 
+	// Disable TCP Nagle's algorithm
+	int yes = 1;
+	if(setsockopt(client_socket, IPPROTO_TCP, TCP_NODELAY, (char *) &yes, sizeof(yes)) < 0
+	   || setsockopt(remote_server_socket, IPPROTO_TCP, TCP_NODELAY, (char *) &yes, sizeof(yes)) < 0)
+	{
+		log_error(log_tag.c_str(), "Can't setsockopt on socket");
+		return;
+	}
+
 	// Modify http request to bypass dpi
 	modify_http_request(first_request, hostlist_condition);
+
+	// last_char indicates position of string end
+	unsigned int last_char = first_request.size();
 
 	// Check if split is need
 	if(hostlist_condition && settings.http.is_use_split)
 	{
-		if(send_string(remote_server_socket, first_request, settings.http.split_position) == -1) // Send request to serv$
+		if(send_string(remote_server_socket, first_request, settings.http.split_position, last_char) == -1) // Send request to serv$
 		{
 			close(remote_server_socket);
 			close(client_socket);
@@ -272,7 +297,7 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 	}
 	else
 	{
-		if(send_string(remote_server_socket, first_request) == -1) // Send request to server
+		if(send_string(remote_server_socket, first_request, last_char) == -1) // Send request to server
 		{
 			close(remote_server_socket);
 			close(client_socket);
@@ -313,17 +338,18 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 			continue;
 		else
 		{
-			// Process client socket
 			if(fds[0].revents & POLLERR || fds[1].revents & POLLERR ||
 				fds[0].revents & POLLHUP || fds[1].revents & POLLHUP ||
 				fds[0].revents & POLLNVAL || fds[1].revents & POLLNVAL)
 				break;
+
+			// Process client socket
 			if (fds[0].revents & POLLIN)
 			{
 				fds[0].revents = 0;
 
 				// Transfer data
-				if(recv_string(client_socket, buffer) == -1) // Receive request from client
+				if(recv_string(client_socket, buffer, last_char) == -1) // Receive request from client
 					break;
 				// Modify http request to bypass dpi
 				modify_http_request(buffer, hostlist_condition);
@@ -331,11 +357,11 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 				// Check if split is need
 				if(hostlist_condition && settings.http.is_use_split)
 				{
-					if(send_string(remote_server_socket, buffer, settings.http.split_position) == -1) // Send request to serv$
+					if(send_string(remote_server_socket, buffer, settings.http.split_position, last_char) == -1) // Send request to serv$
 						break;
 				}
 				else
-					if(send_string(remote_server_socket, buffer) == -1) // Send request to server
+					if(send_string(remote_server_socket, buffer, last_char) == -1) // Send request to server
 						break;
 			}
 
@@ -345,9 +371,9 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 				fds[1].revents = 0;
 
 				// Transfer data
-				if(recv_string(remote_server_socket, buffer) == -1) // Receive response from server
+				if(recv_string(remote_server_socket, buffer, last_char) == -1) // Receive response from server
 					break;
-				if(send_string(client_socket, buffer) == -1) // Send response to client
+				if(send_string(client_socket, buffer, last_char) == -1) // Send response to client
 					break;
 			}
 
@@ -372,11 +398,16 @@ void process_client(int client_socket)
     timeout.tv_sec = 2;
     timeout.tv_usec = 0;
 
-	if(recv_string(client_socket, request, timeout) == -1)
+	// last_char indicates position of string end
+	unsigned int last_char;
+
+	if(recv_string(client_socket, request, timeout, last_char) == -1)
 	{
 		close(client_socket);
 		return;
 	}
+
+	request.resize(last_char);
 
 	std::string method;
 	std::string host;
@@ -390,7 +421,7 @@ void process_client(int client_socket)
 
 	if(method == "CONNECT")
 	{
-		if(send_string(client_socket, CONNECTION_ESTABLISHED_RESPONSE) == -1)
+		if(send_string(client_socket, CONNECTION_ESTABLISHED_RESPONSE, CONNECTION_ESTABLISHED_RESPONSE.size()) == -1)
 		{
 			close(client_socket);
 			return;
@@ -659,21 +690,58 @@ extern "C" JNIEXPORT void Java_ru_evgeniy_dpitunnel_service_NativeService_accept
 {
     std::string log_tag = "CPP/acceptClientCycle";
 
+	struct pollfd fds[2];
+
+	// fds[0] is server socket
+	fds[0].fd = server_socket;
+	fds[0].events = POLLIN;
+
+	// fds[1] is interrupt pipe
+	fds[1].fd = interrupt_pipe[0];
+	fds[1].events = POLLIN;
+
+	// Set poll() timeout
+	int timeout = 10000;
+
     while(!stop_flag)
     {
-        //Accept client
-        int client_socket;
-        struct sockaddr_in client_address;
-        socklen_t client_address_size = sizeof(client_address);
-        if((client_socket = accept(server_socket, (sockaddr *) &client_address, &client_address_size)) < 0)
-        {
-            log_error(log_tag.c_str(), "Can't accept client socket. Error: %s", std::strerror(errno));
-            return;
-        }
+		int ret = poll(fds, 2, timeout);
 
-        // Create new thread
-        std::thread t1(process_client, client_socket);
-        threads.push_back(std::move(t1));
+		// Check state
+		if ( ret == -1 )
+		{
+			log_error(log_tag.c_str(), "Poll error. Errno: %s", std::strerror(errno));
+			break;
+		}
+		else if ( ret == 0 ) // Just timeout
+			continue;
+		else
+		{
+			if (fds[0].revents & POLLERR ||
+			   fds[0].revents & POLLHUP ||
+			   fds[0].revents & POLLNVAL)
+				break;
+
+			//Accept client
+			if (fds[0].revents & POLLIN)
+			{
+				int client_socket;
+				struct sockaddr_in client_address;
+				socklen_t client_address_size = sizeof(client_address);
+				if((client_socket = accept(server_socket, (sockaddr *) &client_address, &client_address_size)) < 0)
+				{
+					log_error(log_tag.c_str(), "Can't accept client socket. Error: %s", std::strerror(errno));
+					return;
+				}
+
+				// Create new thread
+				std::thread t1(process_client, client_socket);
+				threads.push_back(std::move(t1));
+			}
+
+			fds[0].revents = 0;
+			fds[1].revents = 0;
+		}
     }
 }
 

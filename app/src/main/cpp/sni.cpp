@@ -45,7 +45,7 @@ int verify_certificate(struct TLSContext *context, struct TLSCertificate **certi
     return no_error;
 }
 
-int recv_string_tls(int socket, SSL *context, std::string & message)
+int recv_string_tls(int & socket, SSL *context, std::string & message, unsigned int & last_char)
 {
     std::string log_tag = "CPP/recv_string_tls";
 
@@ -85,16 +85,18 @@ int recv_string_tls(int socket, SSL *context, std::string & message)
         message_offset += read_size;
     }
 
-    message.resize(message_offset);
+    // Set position of last character
+    last_char = message_offset;
 
     return 0;
 }
 
-int send_string_tls(int socket, TLSContext *context, const std::string & string_to_send)
+int send_string_tls(int & socket, TLSContext *context, const std::string & string_to_send, unsigned int last_char)
 {
     std::string log_tag = "CPP/send_string_tls";
 
-    if(string_to_send.empty())
+    // Check if string is empty
+    if(last_char == 0)
         return 0;
 
     size_t offset = 0;
@@ -109,9 +111,9 @@ int send_string_tls(int socket, TLSContext *context, const std::string & string_
         return -1;
     }
 
-    while(string_to_send.size() - offset != 0)
+    while(last_char - offset != 0)
     {
-        ssize_t send_size = SSL_write(context, string_to_send.c_str() + offset, string_to_send.size() - offset);
+        ssize_t send_size = SSL_write(context, string_to_send.c_str() + offset, last_char - offset);
         if(send_size < 0)
         {
             if(errno == EAGAIN) break;
@@ -160,7 +162,7 @@ SSL* init_tls_server_server(const std::string & sni_str, const std::vector<std::
     return server_context;
 }
 
-SSL* init_tls_server_client(int client_socket, SSL* server_context)
+SSL* init_tls_server_client(int & client_socket, SSL* server_context)
 {
     std::string log_tag = "CPP/init_tls_server_client";
 
@@ -177,7 +179,7 @@ SSL* init_tls_server_client(int client_socket, SSL* server_context)
     return client;
 }
 
-SSL* init_tls_client(int socket, std::string & sni)
+SSL* init_tls_client(int & socket, std::string & sni)
 {
     std::string log_tag = "CPP/init_tls_client";
 

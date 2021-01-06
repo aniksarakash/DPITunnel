@@ -5,7 +5,7 @@
 
 extern struct Settings settings;
 
-int recv_string(int socket, std::string & message)
+int recv_string(int & socket, std::string & message, unsigned int & last_char)
 {
     std::string log_tag = "CPP/recv_string";
 
@@ -45,12 +45,13 @@ int recv_string(int socket, std::string & message)
         message_offset += read_size;
     }
 
-    message.resize(message_offset);
+    // Set position of last character
+    last_char = message_offset;
 
     return 0;
 }
 
-int recv_string(int socket, std::string & message, struct timeval timeout)
+int recv_string(int & socket, std::string & message, struct timeval timeout, unsigned int & last_char)
 {
     std::string log_tag = "CPP/recv_string";
 
@@ -102,16 +103,18 @@ int recv_string(int socket, std::string & message, struct timeval timeout)
         }
     }
 
-    message.resize(message_offset);
+    // Set position of last character
+    last_char = message_offset;
 
     return 0;
 }
 
-int send_string(int socket, const std::string & string_to_send)
+int send_string(int & socket, const std::string & string_to_send, unsigned int last_char)
 {
     std::string log_tag = "CPP/send_string";
 
-    if(string_to_send.empty())
+    // Check if string is empty
+    if(last_char == 0)
         return 0;
 
     size_t offset = 0;
@@ -126,9 +129,9 @@ int send_string(int socket, const std::string & string_to_send)
         return -1;
     }
 
-    while(string_to_send.size() - offset != 0)
+    while(last_char - offset != 0)
     {
-        ssize_t send_size = send(socket, string_to_send.c_str() + offset, string_to_send.size() - offset, 0);
+        ssize_t send_size = send(socket, string_to_send.c_str() + offset, last_char - offset, 0);
         if(send_size < 0)
         {
             if(errno == EINTR)      continue; // All is good. This is just interrrupt.
@@ -147,14 +150,14 @@ int send_string(int socket, const std::string & string_to_send)
     return 0;
 }
 
-int send_string(int socket, const std::string & string_to_send, unsigned int split_position)
+int send_string(int & socket, const std::string & string_to_send, unsigned int split_position, unsigned int last_char)
 {
     std::string log_tag = "CPP/send_string";
 
-    if(string_to_send.empty())
+    // Check if string is empty
+    if(last_char == 0)
         return 0;
 
-    FILE *write_socket = fdopen(socket, "w+");
     size_t offset = 0;
 
     // Set send timeout on socket
@@ -167,25 +170,22 @@ int send_string(int socket, const std::string & string_to_send, unsigned int spl
         return -1;
     }
 
-    while(string_to_send.size() - offset != 0)
+    while(last_char - offset != 0)
     {
-        ssize_t send_size = send(socket, string_to_send.c_str() + offset, string_to_send.size() - offset < split_position ? string_to_send.size() - offset < split_position : split_position, 0);
+        ssize_t send_size = send(socket, string_to_send.c_str() + offset, last_char - offset < split_position ? last_char - offset < split_position : split_position, 0);
         if(send_size < 0)
         {
             if(errno == EINTR)	continue; // All is good. This is just interrrupt.
             else
             {
                 log_error(log_tag.c_str(), "There is critical send error. Can't process client. Errno: %s", std::strerror(errno));
-                fclose(write_socket);
                 return -1;
             }
         }
         if(send_size == 0)
         {
-            fclose(write_socket);
             return -1;
         }
-        fflush(write_socket); // Flush send buffer
         offset += send_size;
     }
 
@@ -247,22 +247,24 @@ int init_remote_server_socket(int & remote_server_socket, std::string & remote_s
         proxy_message_buffer[1] = 0x01; // set number of auth methods
         proxy_message_buffer[2] = 0x00; // set noauth method
 
-        if(send_string(remote_server_socket, proxy_message_buffer) == -1)
+        if(send_string(remote_server_socket, proxy_message_buffer, proxy_message_buffer.size()) == -1)
         {
             log_error(log_tag.c_str(), "Failed to send hello packet to SOCKS5 proxy server");
             return -1;
         }
 
         // Receive response from proxy server
+        // last_char indicates string end position
+        unsigned int last_char;
         proxy_message_buffer.resize(0);
         do
         {
-            if(recv_string(remote_server_socket, proxy_message_buffer) == -1)
+            if(recv_string(remote_server_socket, proxy_message_buffer, last_char) == -1)
             {
                 log_error(log_tag.c_str(), "Failed to receive response from proxy server");
                 return -1;
             }
-        } while(proxy_message_buffer.empty());
+        } while(last_char == 0);
 
         // Check auth method selected by proxy server
         if(proxy_message_buffer[1] != 0x00)
@@ -292,7 +294,7 @@ int init_remote_server_socket(int & remote_server_socket, std::string & remote_s
         proxy_message_buffer[9] = remote_server_port & 0xFF;
 
         // Send command packet to proxy server
-        if(send_string(remote_server_socket, proxy_message_buffer) == -1)
+        if(send_string(remote_server_socket, proxy_message_buffer, proxy_message_buffer.size()) == -1)
         {
             log_error(log_tag.c_str(), "Failed to send command packet to proxy server");
             return -1;
@@ -302,12 +304,12 @@ int init_remote_server_socket(int & remote_server_socket, std::string & remote_s
         proxy_message_buffer.resize(0);
         do
         {
-            if(recv_string(remote_server_socket, proxy_message_buffer) == -1)
+            if(recv_string(remote_server_socket, proxy_message_buffer, last_char) == -1)
             {
                 log_error(log_tag.c_str(), "Failed to receive response from proxy server");
                 return -1;
             }
-        } while(proxy_message_buffer.empty());
+        } while(last_char == 0);
 
         // Check response code
         if(proxy_message_buffer[1] != 0x00)
@@ -352,22 +354,24 @@ int init_remote_server_socket(int & remote_server_socket, std::string & remote_s
                                                ":" + std::to_string(remote_server_port) + " HTTP/1.1\r\n\r\n";
 
             // Send CONNECT request
-            if(send_string(remote_server_socket, proxy_message_buffer) == -1)
+            if(send_string(remote_server_socket, proxy_message_buffer, proxy_message_buffer.size()) == -1)
             {
                 log_error(log_tag.c_str(), "Failed to send connect packet to HTTP proxy server");
                 return -1;
             }
 
             // Receive reply
+            // last_char indicates string end position
+            unsigned int last_char;
             proxy_message_buffer.resize(0);
             do
             {
-                if(recv_string(remote_server_socket, proxy_message_buffer) == -1)
+                if(recv_string(remote_server_socket, proxy_message_buffer, last_char) == -1)
                 {
                     log_error(log_tag.c_str(), "Failed to receive response from proxy server");
                     return -1;
                 }
-            } while(proxy_message_buffer.empty());
+            } while(last_char == 0);
 
             // Check response code
             size_t success_response_position = proxy_message_buffer.find("200");
