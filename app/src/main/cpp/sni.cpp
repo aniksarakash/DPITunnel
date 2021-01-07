@@ -179,7 +179,7 @@ SSL* init_tls_server_client(int & client_socket, SSL* server_context)
     return client;
 }
 
-SSL* init_tls_client(int & socket, std::string & sni)
+SSL* init_tls_client(int & socket, std::string & sni, bool is_set_sni)
 {
     std::string log_tag = "CPP/init_tls_client";
 
@@ -208,7 +208,8 @@ SSL* init_tls_client(int & socket, std::string & sni)
 
     SSL_set_fd(client_context, socket);
 
-    tls_sni_set(client_context, sni.c_str());
+    if(is_set_sni)
+        tls_sni_set(client_context, sni.c_str());
 
     int ret;
     if ((ret = SSL_connect(client_context)) != 1) {

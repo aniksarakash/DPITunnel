@@ -1,5 +1,6 @@
 #include "dpi-bypass.h"
 #include "socket.h"
+#include "sni.h"
 #include "dns.h"
 #include "hostlist.h"
 
@@ -192,7 +193,7 @@ int send_string(int & socket, const std::string & string_to_send, unsigned int s
     return 0;
 }
 
-int init_remote_server_socket(int & remote_server_socket, std::string & remote_server_host, int remote_server_port, bool is_https, bool hostlist_condition)
+int init_remote_server_socket(int & remote_server_socket, std::string & remote_server_host, int remote_server_port, bool is_https, bool hostlist_condition, SSL *& client_context)
 {
     std::string log_tag = "CPP/init_remote_server_socket";
 
@@ -222,6 +223,8 @@ int init_remote_server_socket(int & remote_server_socket, std::string & remote_s
             log_error(log_tag.c_str(), "Failed to parse SOKCS5 server");
         }
         std::string proxy_ip = settings.other.socks5_server.substr(0, splitter_position);
+        // If address is hostname, resolve it
+        resolve_host(proxy_ip, proxy_ip, false);
         std::string proxy_port = settings.other.socks5_server.substr(splitter_position + 1, settings.other.socks5_server.size() - splitter_position - 1);
 
         // Add port and address
@@ -318,7 +321,7 @@ int init_remote_server_socket(int & remote_server_socket, std::string & remote_s
             return -1;
         }
     }
-        // Check if HTTP proxy is need
+    // Check if HTTP proxy is need
     else if(hostlist_condition && ((settings.https.is_use_http_proxy && is_https) || (settings.http.is_use_http_proxy && !is_https)))
     {
         // Parse http server string
@@ -328,6 +331,8 @@ int init_remote_server_socket(int & remote_server_socket, std::string & remote_s
             log_error(log_tag.c_str(), "Failed to parse HTTP server");
         }
         std::string proxy_ip = settings.other.http_proxy_server.substr(0, splitter_position);
+        // If address is hostname, resolve it
+        resolve_host(proxy_ip, proxy_ip, false);
         std::string proxy_port = settings.other.http_proxy_server.substr(splitter_position + 1, settings.other.http_proxy_server.size() - splitter_position - 1);
 
         // Add port and address
@@ -380,6 +385,79 @@ int init_remote_server_socket(int & remote_server_socket, std::string & remote_s
                 log_error(log_tag.c_str(), "Proxy server failed to connect to remote host");
                 return -1;
             }
+        }
+    }
+    // Check if HTTPS proxy is need
+    else if(hostlist_condition && ((settings.https.is_use_https_proxy && is_https) || (settings.http.is_use_https_proxy && !is_https)))
+    {
+        // Parse http server string
+        size_t splitter_position = settings.other.https_proxy_server.find(':');
+        if(splitter_position == std::string::npos)
+        {
+            log_error(log_tag.c_str(), "Failed to parse HTTPS server");
+        }
+        std::string proxy_ip = settings.other.https_proxy_server.substr(0, splitter_position);
+        // If address is hostname, resolve it
+        resolve_host(proxy_ip, proxy_ip, false);
+        std::string proxy_port = settings.other.https_proxy_server.substr(splitter_position + 1, settings.other.https_proxy_server.size() - splitter_position - 1);
+
+        // Add port and address
+        remote_server_address.sin_family = AF_INET;
+        remote_server_address.sin_port = htons(atoi(proxy_port.c_str()));
+
+        if(inet_pton(AF_INET, proxy_ip.c_str(), &remote_server_address.sin_addr) <= 0)
+        {
+            log_error(log_tag.c_str(), "Invalid proxy server ip address");
+            return -1;
+        }
+
+        // Connect to remote server
+        if(connect(remote_server_socket, (struct sockaddr *) &remote_server_address, sizeof(remote_server_address)) < 0)
+        {
+            log_error(log_tag.c_str(), "Can't connect to proxy server. Errno: %s", strerror(errno));
+            return -1;
+        }
+
+        // Init tls connection
+        std::string empty_str = "";
+        client_context = init_tls_client(remote_server_socket, empty_str, false);
+        if(client_context == NULL){
+            SSL_shutdown(client_context);
+            close(remote_server_socket);
+            SSL_CTX_free(client_context);
+            return -1;
+        }
+
+        // Ask proxy server to connect to remote host
+        std::string proxy_message_buffer = "CONNECT " + remote_server_ip +
+                                           ":" + std::to_string(remote_server_port) + " HTTP/1.1\r\n\r\n";
+
+        // Send CONNECT request
+        if(send_string_tls(remote_server_socket, client_context, proxy_message_buffer, proxy_message_buffer.size()) == -1)
+        {
+            log_error(log_tag.c_str(), "Failed to send connect packet to HTTPS proxy server");
+            return -1;
+        }
+
+        // Receive reply
+        // last_char indicates string end position
+        unsigned int last_char;
+        proxy_message_buffer.resize(0);
+        do
+        {
+            if(recv_string_tls(remote_server_socket, client_context, proxy_message_buffer, last_char) == -1)
+            {
+                log_error(log_tag.c_str(), "Failed to receive response from proxy server");
+                return -1;
+            }
+        } while(last_char == 0);
+
+        // Check response code
+        size_t success_response_position = proxy_message_buffer.find("200");
+        if(success_response_position == std::string::npos)
+        {
+            log_error(log_tag.c_str(), "Proxy server failed to connect to remote host");
+            return -1;
         }
     }
     else

@@ -24,6 +24,11 @@
             android:summary="@string/http_proxy_summary"
             android:title="@string/http_proxy_title"
             android:defaultValue="false" />
+        <androidx.preference.CheckBoxPreference
+            android:key="https_https_proxy"
+            android:summary="@string/https_proxy_summary"
+            android:title="@string/https_proxy_title"
+            android:defaultValue="false" />
 
     </androidx.preference.PreferenceCategory>
 
@@ -104,6 +109,11 @@
             android:summary="@string/http_proxy_summary"
             android:title="@string/http_proxy_title"
             android:defaultValue="false" />
+        <androidx.preference.CheckBoxPreference
+            android:key="http_https_proxy"
+            android:summary="@string/https_proxy_summary"
+            android:title="@string/https_proxy_title"
+            android:defaultValue="false" />
 
     </androidx.preference.PreferenceCategory>
 
@@ -165,6 +175,11 @@
             android:dialogTitle="@string/other_http_proxy_title"
             android:key="other_http_proxy"
             android:title="@string/other_http_proxy_title"
+            android:defaultValue="address:port" />
+        <androidx.preference.EditTextPreference
+            android:dialogTitle="@string/other_https_proxy_title"
+            android:key="other_https_proxy"
+            android:title="@string/other_https_proxy_title"
             android:defaultValue="address:port" />
         <androidx.preference.EditTextPreference
             android:dialogTitle="@string/other_bind_port_title"

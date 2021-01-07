@@ -53,7 +53,8 @@ void proxy_https(int client_socket, std::string host, int port)
 	bool hostlist_condition = settings.hostlist.is_use_hostlist ? find_in_hostlist(hosts_arr) : true;
 
 	// Connect to remote server
-	if(init_remote_server_socket(remote_server_socket, host, port, true, hostlist_condition) == -1)
+	SSL *client_context;
+	if(init_remote_server_socket(remote_server_socket, host, port, true, hostlist_condition, client_context) == -1)
 	{
 		return;
 	}
@@ -83,8 +84,7 @@ void proxy_https(int client_socket, std::string host, int port)
 	// Init tlse if SNI replace enabled
 	struct TLSContext *server_server_context;
 	struct TLSContext *server_client_context;
-	SSL *client_context;
-	if(settings.sni.is_use_sni_replace && hostlist_condition)
+	if(settings.sni.is_use_sni_replace && hostlist_condition && !settings.https.is_use_https_proxy)
 	{
 		// Create server. It will decrypt client's traffic
 		// Here we need to pass all hostnames and generate one certificate for them
@@ -111,7 +111,7 @@ void proxy_https(int client_socket, std::string host, int port)
         replaceAll(fake_sni, SNI_REPLACE_VARIABLE, host);
 
         // Create client. It will encrypt and send traffic with fake SNI
-		client_context = init_tls_client(remote_server_socket, fake_sni);
+		client_context = init_tls_client(remote_server_socket, fake_sni, true);
         if(client_context == NULL){
             SSL_shutdown(client_context);
             close(remote_server_socket);
@@ -175,7 +175,16 @@ void proxy_https(int client_socket, std::string host, int port)
 				fds[0].revents = 0;
 
 				// Transfer data
-				if(settings.sni.is_use_sni_replace && hostlist_condition)
+				if(hostlist_condition && settings.https.is_use_https_proxy)
+				{
+					if(recv_string(client_socket, buffer, last_char) == -1) // Receive request from client
+						break;
+
+					if (send_string_tls(remote_server_socket, client_context, buffer, last_char) ==
+						-1) // Send request to server
+						break;
+				}
+				else if(settings.sni.is_use_sni_replace && hostlist_condition)
 				{
 				    if (recv_string_tls(client_socket, server_client_context, buffer, last_char) ==
 				        -1) // Receive request from client
@@ -212,6 +221,15 @@ void proxy_https(int client_socket, std::string host, int port)
 				fds[1].revents = 0;
 
 				// Transfer data
+				if(hostlist_condition && settings.https.is_use_https_proxy)
+				{
+					if (recv_string_tls(remote_server_socket, client_context, buffer, last_char) ==
+						-1) // Receive response from server
+						break;
+
+					if(send_string(client_socket, buffer, last_char) == -1) // Send response to client
+						break;
+				}
 				if(settings.sni.is_use_sni_replace && hostlist_condition)
 				{
 					if (recv_string_tls(remote_server_socket, client_context, buffer, last_char) ==
@@ -236,7 +254,15 @@ void proxy_https(int client_socket, std::string host, int port)
 		}
 	}
 
-	if(settings.sni.is_use_sni_replace && hostlist_condition)
+	if(settings.https.is_use_https_proxy && hostlist_condition)
+    {
+        SSL_shutdown(client_context);
+        close(remote_server_socket);
+        SSL_CTX_free(client_context);
+
+        close(client_socket);
+    }
+	else if(settings.sni.is_use_sni_replace && hostlist_condition)
 	{
 		SSL_shutdown(client_context);
 		close(remote_server_socket);
@@ -265,7 +291,8 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 	bool hostlist_condition = settings.hostlist.is_use_hostlist ? find_in_hostlist(host) : true;
 
 	// Connect to remote server
-	if(init_remote_server_socket(remote_server_socket, host, port, false, hostlist_condition) == -1)
+	SSL *client_context;
+	if(init_remote_server_socket(remote_server_socket, host, port, false, hostlist_condition, client_context) == -1)
 	{
 		return;
 	}
@@ -285,23 +312,28 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 	// last_char indicates position of string end
 	unsigned int last_char = first_request.size();
 
-	// Check if split is need
-	if(hostlist_condition && settings.http.is_use_split)
-	{
-		if(send_string(remote_server_socket, first_request, settings.http.split_position, last_char) == -1) // Send request to serv$
-		{
-			close(remote_server_socket);
-			close(client_socket);
-			return;
-		}
-	}
+	if(hostlist_condition && settings.http.is_use_https_proxy)
+		send_string_tls(remote_server_socket, client_context, first_request, last_char);
 	else
 	{
-		if(send_string(remote_server_socket, first_request, last_char) == -1) // Send request to server
+		// Check if split is need
+		if(hostlist_condition && settings.http.is_use_split)
 		{
-			close(remote_server_socket);
-			close(client_socket);
-			return;
+			if(send_string(remote_server_socket, first_request, settings.http.split_position, last_char) == -1) // Send request to serv$
+			{
+				close(remote_server_socket);
+				close(client_socket);
+				return;
+			}
+		}
+		else
+		{
+			if(send_string(remote_server_socket, first_request, last_char) == -1) // Send request to server
+			{
+				close(remote_server_socket);
+				close(client_socket);
+				return;
+			}
 		}
 	}
 
@@ -354,15 +386,20 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 				// Modify http request to bypass dpi
 				modify_http_request(buffer, hostlist_condition);
 
-				// Check if split is need
-				if(hostlist_condition && settings.http.is_use_split)
-				{
-					if(send_string(remote_server_socket, buffer, settings.http.split_position, last_char) == -1) // Send request to serv$
-						break;
-				}
+				if(hostlist_condition && settings.http.is_use_https_proxy)
+					send_string_tls(remote_server_socket, client_context, buffer, last_char);
 				else
+				{
+					// Check if split is need
+					if(hostlist_condition && settings.http.is_use_split)
+					{
+						if(send_string(remote_server_socket, buffer, settings.http.split_position, last_char) == -1) // Send request to serv$
+							break;
+					}
+					else
 					if(send_string(remote_server_socket, buffer, last_char) == -1) // Send request to server
 						break;
+				}
 			}
 
 			// Process server socket
@@ -371,7 +408,9 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 				fds[1].revents = 0;
 
 				// Transfer data
-				if(recv_string(remote_server_socket, buffer, last_char) == -1) // Receive response from server
+				if(hostlist_condition && settings.http.is_use_https_proxy)
+					recv_string_tls(remote_server_socket, client_context, buffer, last_char);
+				else if(recv_string(remote_server_socket, buffer, last_char) == -1) // Receive response from server
 					break;
 				if(send_string(client_socket, buffer, last_char) == -1) // Send response to client
 					break;
@@ -383,8 +422,19 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 		}
 	}
 
-	close(remote_server_socket);
-	close(client_socket);
+    if(settings.https.is_use_https_proxy && hostlist_condition)
+    {
+        SSL_shutdown(client_context);
+        close(remote_server_socket);
+        SSL_CTX_free(client_context);
+
+        close(client_socket);
+    }
+    else
+    {
+        close(remote_server_socket);
+        close(client_socket);
+    }
 }
 
 void process_client(int client_socket)
@@ -518,6 +568,10 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_service_NativeServic
     settings.https.is_use_http_proxy = env->CallBooleanMethod(prefs_object, prefs_getBool, (jstring) string_object1, false);
     env->DeleteLocalRef(string_object1);
 
+	string_object1 = env->NewStringUTF("https_https_proxy");
+	settings.https.is_use_https_proxy = env->CallBooleanMethod(prefs_object, prefs_getBool, (jstring) string_object1, false);
+	env->DeleteLocalRef(string_object1);
+
     // SNI options
     string_object1 = env->NewStringUTF("sni_enable");
     settings.sni.is_use_sni_replace = env->CallBooleanMethod(prefs_object, prefs_getBool, (jstring) string_object1, false);
@@ -584,6 +638,10 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_service_NativeServic
     settings.http.is_use_http_proxy = env->CallBooleanMethod(prefs_object, prefs_getBool, (jstring) string_object1, false);
     env->DeleteLocalRef(string_object1);
 
+	string_object1 = env->NewStringUTF("http_https_proxy");
+	settings.http.is_use_https_proxy = env->CallBooleanMethod(prefs_object, prefs_getBool, (jstring) string_object1, false);
+	env->DeleteLocalRef(string_object1);
+
     // DoH options
     string_object1 = env->NewStringUTF("dns_doh");
     settings.dns.is_use_doh = env->CallBooleanMethod(prefs_object, prefs_getBool, (jstring) string_object1, false);
@@ -633,6 +691,13 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_service_NativeServic
     settings.other.http_proxy_server = std::string(str);
     env->DeleteLocalRef(string_object1);
     env->DeleteLocalRef(string_object);
+
+	string_object1 = env->NewStringUTF("other_https_proxy");
+	string_object = env->CallObjectMethod(prefs_object, prefs_getString, (jstring) string_object1, NULL);
+	str = env->GetStringUTFChars((jstring) string_object, 0);
+	settings.other.https_proxy_server = std::string(str);
+	env->DeleteLocalRef(string_object1);
+	env->DeleteLocalRef(string_object);
 
     string_object1 = env->NewStringUTF("other_bind_port");
     string_object = env->CallObjectMethod(prefs_object, prefs_getString, (jstring) string_object1, NULL);

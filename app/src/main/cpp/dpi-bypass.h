@@ -37,6 +37,7 @@ struct Settings
         unsigned int split_position;
         bool is_use_socks5;
         bool is_use_http_proxy;
+        bool is_use_https_proxy;
     } https;
 
     struct
@@ -59,6 +60,7 @@ struct Settings
         bool is_use_unix_newline;
         bool is_use_socks5;
         bool is_use_http_proxy;
+        bool is_use_https_proxy;
     } http;
 
     struct
@@ -79,6 +81,7 @@ struct Settings
     {
         std::string socks5_server;
         std::string http_proxy_server;
+        std::string https_proxy_server;
         int bind_port;
         bool is_use_vpn;
     } other;

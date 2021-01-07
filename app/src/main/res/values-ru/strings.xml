@@ -71,4 +71,7 @@
     <string name="grant_root_rights_success">Рут права удачно получены</string>
     <string name="sni_slide_text">Если вы хотите использовать опцию подмены SNI, для комфортной работы вам необходимо установить <a href="https://github.com/zhenyolka/DPITunnel/blob/master/app/src/main/assets/rootCA.crt">этот</a> SSL сертификат. Для этого скачайте его, откройте настройки устройства. Откройте безопасность->шифрование и учетные данные->установка с SD-карты. Выбирете загруженный сертификат и установите его. Не переживайте о безопасности данных, так как они обрабатываются локально.</string>
     <string name="root_slide_text">DPI Tunnel обнаружил, что ваша версия Android ниже, чем Android 5. Это означает, что DPI Tunnel может работать только с правами root на вашем телефоне. Пожалуйста, предоставьте их.</string>
+    <string name="https_proxy_summary">Если эта опция включена, запросы к серверу проходят через HTTPS прокси</string>
+    <string name="https_proxy_title">Использовать HTTPS(TLS) proxy</string>
+    <string name="other_https_proxy_title">Адрес HTTPS(TLS) прокси сервера</string>
 </resources>
