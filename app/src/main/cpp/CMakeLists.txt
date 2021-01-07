@@ -56,7 +56,6 @@ add_library( # Sets the name of the library.
 
         # Provides a relative path to your source file(s).
         tlse/tlse.c
-        tlse/curve25519.c
         )
 
 # Add log library
@@ -76,6 +75,11 @@ include_directories(
 include_directories(
         tun2http
         "${PROJECT_SOURCE_DIR}/tun2http"
+)
+include_directories(
+        tlse
+        "${PROJECT_SOURCE_DIR}/tun2http"
+        "${PROJECT_SOURCE_DIR}/tlse"
 )
 
 target_link_libraries( # Specifies the target library.

@@ -34,7 +34,8 @@ public class Utils {
             Message dns_message = Message.newQuery(Record.newRecord(new Name(hostname_full), Type.A, DClass.IN));
 
             // Encode DNS request to base64
-            String dns_message_encoded = Base64.encodeToString(dns_message.toWire(), Base64.NO_PADDING);
+            String dns_message_encoded = Base64.encodeToString(dns_message.toWire(), Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
+            dns_message_encoded = dns_message_encoded.trim().replace('+', '-').replace('/', '_');
 
             System.setProperty("http.keepAlive", "false");
             System.setProperty("java.net.preferIPv4Stack" , "true");

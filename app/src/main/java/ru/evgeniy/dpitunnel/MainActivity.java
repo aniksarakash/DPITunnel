@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private Button updateHostlistButton;
     private TextView asciiLogo;
     private static boolean isOnBoot;
+    private SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
         // Set default settings values
         PreferenceManager.setDefaultValues(this, R.xml.settings, false);
 
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         if (!prefs.getBoolean("firstTimeFlag", false)) {
             // mark first time has ran
@@ -161,30 +162,30 @@ public class MainActivity extends AppCompatActivity {
                 stopService(new Intent(MainActivity.this, NativeService.class));
             }
             else {
-                // Check permissions
-                PermissionListener permissionListener = new PermissionListener() {
-                    @Override
-                    public void onPermissionGranted() {
-                        // If ok start service
-                        Intent intent = new Intent(MainActivity.this, NativeService.class);
+                // Check if we need permissions
+                if(prefs.getString("hostlist_path", null).startsWith(getFilesDir().toString())) {
+                    startNativeService();
+                }
+                else {
+                    PermissionListener permissionListener = new PermissionListener() {
+                        @Override
+                        public void onPermissionGranted() {
+                            // If ok start service
+                            startNativeService();
+                        }
 
-                        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                            startForegroundService(intent);
-                        else
-                            startService(intent);
-                    }
+                        @Override
+                        public void onPermissionDenied(List<String> deniedPermissions) {
+                            // If not ok show warning
+                            Toast.makeText(MainActivity.this, getString(R.string.please_grant_permissions), Toast.LENGTH_LONG).show();
+                        }
+                    };
 
-                    @Override
-                    public void onPermissionDenied(List<String> deniedPermissions) {
-                        // If not ok show warning
-                        Toast.makeText(MainActivity.this, getString(R.string.please_grant_permissions), Toast.LENGTH_LONG).show();
-                    }
-                };
-
-                TedPermission.with(MainActivity.this)
-                        .setPermissionListener(permissionListener)
-                        .setPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
-                        .check();
+                    TedPermission.with(MainActivity.this)
+                            .setPermissionListener(permissionListener)
+                            .setPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
+                            .check();
+                }
             }
         });
         settingsButton.setOnClickListener(v -> {
@@ -202,6 +203,15 @@ public class MainActivity extends AppCompatActivity {
         if(isOnBoot) {
             mainButton.performClick();
         }
+    }
+
+    private void startNativeService() {
+        Intent intent = new Intent(MainActivity.this, NativeService.class);
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            startForegroundService(intent);
+        else
+            startService(intent);
     }
 
     private void stopVpn() {
@@ -274,24 +284,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateHostlist() {
-        PermissionListener permissionListener = new PermissionListener() {
-            @Override
-            public void onPermissionGranted() {
-                // If ok update hostlist
-                new updateHostlistTask().execute();
-            }
+        // Check if we need permissions
+        if(prefs.getString("hostlist_path", null).startsWith(getFilesDir().toString())) {
+            new updateHostlistTask().execute();
+        }
+        else {
+            PermissionListener permissionListener = new PermissionListener() {
+                @Override
+                public void onPermissionGranted() {
+                    // If ok update hostlist
+                    new updateHostlistTask().execute();
+                }
 
-            @Override
-            public void onPermissionDenied(List<String> deniedPermissions) {
-                // If not ok show warning
-                Toast.makeText(MainActivity.this, getString(R.string.please_grant_permissions), Toast.LENGTH_LONG).show();
-            }
-        };
+                @Override
+                public void onPermissionDenied(List<String> deniedPermissions) {
+                    // If not ok show warning
+                    Toast.makeText(MainActivity.this, getString(R.string.please_grant_permissions), Toast.LENGTH_LONG).show();
+                }
+            };
 
-        TedPermission.with(MainActivity.this)
-                .setPermissionListener(permissionListener)
-                .setPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                .check();
+            TedPermission.with(MainActivity.this)
+                    .setPermissionListener(permissionListener)
+                    .setPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    .check();
+        }
     }
 
     private boolean isServiceRunning(Class<?> serviceClass) {
