@@ -42,6 +42,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 import ru.evgeniy.dpitunnel.service.NativeService;
 import ru.evgeniy.dpitunnel.service.Tun2HttpVpnService;
+import ru.evgeniy.dpitunnel.util.CertUtils;
 
 public class MainActivity extends AppCompatActivity {
     private final String log_tag = "Java/MainActivity";
@@ -89,8 +90,9 @@ public class MainActivity extends AppCompatActivity {
             // do one time tasks
             unpackAssets();
             updateHostlist();
+            CertUtils.Companion.generateRootCA(this);
 
-            // start teach activity
+            // start tutorial activity
             startActivity(new Intent(this, TutorialActivity.class));
         }
 

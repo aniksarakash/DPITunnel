@@ -39,7 +39,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/main_tool_bar" />
+        app:layout_constraintTop_toBottomOf="@+id/main_tool_bar"
+        tools:text="@string/on"/>
 
     <Button
         android:id="@+id/update_hostlist_button"

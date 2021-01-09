@@ -11,6 +11,7 @@ android {
         versionName "4.0"
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         vectorDrawables.useSupportLibrary = true
+        multiDexEnabled true
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++14"
@@ -50,6 +51,8 @@ dependencies {
     implementation "androidx.core:core-ktx:+"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.madgag.spongycastle:bcpkix-jdk15on:1.58.0.0'
+    implementation 'com.android.support:multidex:1.0.3'
 }
 repositories {
     maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }

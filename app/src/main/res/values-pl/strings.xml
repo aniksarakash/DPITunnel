@@ -69,8 +69,10 @@
     <string name="grant_root_rights">Przyznać prawa roota</string>
     <string name="grant_root_rights_fail">Wystąpił błąd podczas pobierania praw roota</string>
     <string name="grant_root_rights_success">Prawa roota zostały pomyślnie uzyskane</string>
-    <string name="sni_slide_text">Jeśli chcesz skorzystać z opcji fałszowania SNI, musisz zainstalować <a href="https://github.com/zhenyolka/DPITunnel/blob/master/app/src/main/assets/rootCA.crt">ten</a> certyfikat SSL, aby wygodnie pracować. Aby to zrobić, pobierz go, otwórz ustawienia urządzenia. Otwórz Security-> Encryption &amp; Credentials-> Install from SD Card. Wybierz pobrany certyfikat i zainstaluj go. Nie martw się o bezpieczeństwo danych, ponieważ są one przetwarzane lokalnie.</string>
+    <string name="sni_slide_text">Jeśli chcesz korzystać z opcji fałszowania SNI, musisz zainstalować ten certyfikat SSL, aby wygodnie pracować. Aby to zrobić, zapisz to. Następnie otwórz Ustawienia telefonu-> Bezpieczeństwo-> Szyfrowanie i poświadczenia-> Zainstaluj z karty SD. Wybierz pobrany certyfikat i zainstaluj go. Nie martw się o bezpieczeństwo danych, ponieważ są one przetwarzane lokalnie.</string>
     <string name="https_proxy_summary">Gdy ta opcja jest włączona, żądania przechodzą przez proxy HTTPS</string>
     <string name="https_proxy_title">Używaj proxy HTTPS(TLS)</string>
     <string name="other_https_proxy_title">Adres proxy HTTPS(TLS)</string>
+    <string name="save_certificate_button">Zapisz certyfikat SSL</string>
+    <string name="saved_to_downloads">Zapisano w folderze pobierania. Nazwa pliku to %1$s</string>
 </resources>

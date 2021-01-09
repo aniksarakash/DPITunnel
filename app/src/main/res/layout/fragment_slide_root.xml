@@ -37,6 +37,7 @@
         android:fontFamily="@font/samsungone"
         android:text="@string/grant_root_rights"
         android:textColor="@color/introTextColor"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
