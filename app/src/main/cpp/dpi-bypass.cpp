@@ -699,6 +699,13 @@ extern "C" JNIEXPORT jint JNICALL Java_ru_evgeniy_dpitunnel_service_NativeServic
 	env->DeleteLocalRef(string_object1);
 	env->DeleteLocalRef(string_object);
 
+	string_object1 = env->NewStringUTF("other_proxy_credentials");
+	string_object = env->CallObjectMethod(prefs_object, prefs_getString, (jstring) string_object1, NULL);
+	str = env->GetStringUTFChars((jstring) string_object, 0);
+	settings.other.proxy_credentials = std::string(str);
+	env->DeleteLocalRef(string_object1);
+	env->DeleteLocalRef(string_object);
+
     string_object1 = env->NewStringUTF("other_bind_port");
     string_object = env->CallObjectMethod(prefs_object, prefs_getString, (jstring) string_object1, NULL);
     settings.other.bind_port = atoi((const char *) env->GetStringUTFChars((jstring) string_object, 0));

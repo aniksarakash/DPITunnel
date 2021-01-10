@@ -1,4 +1,5 @@
 #include "dpi-bypass.h"
+#include "base64.h"
 #include "socket.h"
 #include "sni.h"
 #include "dns.h"
@@ -332,6 +333,7 @@ int init_remote_server_socket(int & remote_server_socket, std::string & remote_s
         }
         std::string proxy_ip = settings.other.http_proxy_server.substr(0, splitter_position);
         // If address is hostname, resolve it
+        std::string host = proxy_ip;
         resolve_host(proxy_ip, proxy_ip, false);
         std::string proxy_port = settings.other.http_proxy_server.substr(splitter_position + 1, settings.other.http_proxy_server.size() - splitter_position - 1);
 
@@ -352,39 +354,48 @@ int init_remote_server_socket(int & remote_server_socket, std::string & remote_s
             return -1;
         }
 
-        // Ask proxy server to connect to remote host if we use https protocol
-        if(is_https)
+        // Ask proxy server to connect to remote host
+        std::string proxy_message_buffer = "CONNECT " + remote_server_ip +
+                                           ":" + std::to_string(remote_server_port) + " HTTP/1.1\r\n";
+
+        // Add Proxy-Authorization header if authorization is need
+        if (!settings.other.proxy_credentials.empty()
+        && settings.other.proxy_credentials != "login:password")
         {
-            std::string proxy_message_buffer = "CONNECT " + remote_server_ip +
-                                               ":" + std::to_string(remote_server_port) + " HTTP/1.1\r\n\r\n";
+            proxy_message_buffer += "Proxy-Authorization: Basic " +
+            macaron::Base64::Encode(settings.other.proxy_credentials) +
+            "\r\n";
+        }
 
-            // Send CONNECT request
-            if(send_string(remote_server_socket, proxy_message_buffer, proxy_message_buffer.size()) == -1)
+        // Add host
+        proxy_message_buffer += "Host: " + host + "\r\n\r\n";
+
+        // Send CONNECT request
+        if(send_string(remote_server_socket, proxy_message_buffer, proxy_message_buffer.size()) == -1)
+        {
+            log_error(log_tag.c_str(), "Failed to send connect packet to HTTP proxy server");
+            return -1;
+        }
+
+        // Receive reply
+        // last_char indicates string end position
+        unsigned int last_char;
+        proxy_message_buffer.resize(0);
+        do
+        {
+            if(recv_string(remote_server_socket, proxy_message_buffer, last_char) == -1)
             {
-                log_error(log_tag.c_str(), "Failed to send connect packet to HTTP proxy server");
+                log_error(log_tag.c_str(), "Failed to receive response from proxy server");
                 return -1;
             }
+        } while(last_char == 0);
 
-            // Receive reply
-            // last_char indicates string end position
-            unsigned int last_char;
-            proxy_message_buffer.resize(0);
-            do
-            {
-                if(recv_string(remote_server_socket, proxy_message_buffer, last_char) == -1)
-                {
-                    log_error(log_tag.c_str(), "Failed to receive response from proxy server");
-                    return -1;
-                }
-            } while(last_char == 0);
-
-            // Check response code
-            size_t success_response_position = proxy_message_buffer.find("200");
-            if(success_response_position == std::string::npos)
-            {
-                log_error(log_tag.c_str(), "Proxy server failed to connect to remote host");
-                return -1;
-            }
+        // Check response code
+        size_t success_response_position = proxy_message_buffer.find("200");
+        if(success_response_position == std::string::npos)
+        {
+            log_error(log_tag.c_str(), "Proxy server failed to connect to remote host");
+            return -1;
         }
     }
     // Check if HTTPS proxy is need
@@ -398,6 +409,7 @@ int init_remote_server_socket(int & remote_server_socket, std::string & remote_s
         }
         std::string proxy_ip = settings.other.https_proxy_server.substr(0, splitter_position);
         // If address is hostname, resolve it
+        std::string host = proxy_ip;
         resolve_host(proxy_ip, proxy_ip, false);
         std::string proxy_port = settings.other.https_proxy_server.substr(splitter_position + 1, settings.other.https_proxy_server.size() - splitter_position - 1);
 
@@ -430,7 +442,19 @@ int init_remote_server_socket(int & remote_server_socket, std::string & remote_s
 
         // Ask proxy server to connect to remote host
         std::string proxy_message_buffer = "CONNECT " + remote_server_ip +
-                                           ":" + std::to_string(remote_server_port) + " HTTP/1.1\r\n\r\n";
+                                           ":" + std::to_string(remote_server_port) + " HTTP/1.1\r\n";
+
+        // Add Proxy-Authorization header if authorization is need
+        if (!settings.other.proxy_credentials.empty()
+            && settings.other.proxy_credentials != "login:password")
+        {
+            proxy_message_buffer += "Proxy-Authorization: Basic " +
+                                    macaron::Base64::Encode(settings.other.proxy_credentials) +
+                                    "\r\n";
+        }
+
+        // Add host
+        proxy_message_buffer += "Host: " + host + "\r\n\r\n";
 
         // Send CONNECT request
         if(send_string_tls(remote_server_socket, client_context, proxy_message_buffer, proxy_message_buffer.size()) == -1)
@@ -441,7 +465,7 @@ int init_remote_server_socket(int & remote_server_socket, std::string & remote_s
 
         // Receive reply
         // last_char indicates string end position
-        unsigned int last_char;
+        unsigned int last_char = 0;
         proxy_message_buffer.resize(0);
         do
         {

@@ -72,7 +72,7 @@ int recv_string_tls(int & socket, SSL *context, std::string & message, unsigned 
         read_size = SSL_read(context, &message[0] + message_offset, message.size() - message_offset);
         if(read_size < 0)
         {
-            if(errno == EWOULDBLOCK || errno == EAGAIN)	break;
+            if(errno == EWOULDBLOCK || errno == EAGAIN || errno == ENOTTY)	break;
             if(errno == EINTR)      continue; // All is good. This is just interrrupt.
             else
             {
@@ -104,7 +104,7 @@ int send_string_tls(int & socket, TLSContext *context, const std::string & strin
     // Set send timeout on socket
     struct timeval timeout;
     timeout.tv_sec = 0;
-    timeout.tv_usec = 100;
+    timeout.tv_usec = 300;
     if(setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, (char *) &timeout, sizeof(timeout)) < 0)
     {
         log_error(log_tag.c_str(), "Can't setsockopt on socket");
@@ -116,8 +116,7 @@ int send_string_tls(int & socket, TLSContext *context, const std::string & strin
         ssize_t send_size = SSL_write(context, string_to_send.c_str() + offset, last_char - offset);
         if(send_size < 0)
         {
-            if(errno == EAGAIN) break;
-            if(errno == EINTR)      continue; // All is good. This is just interrrupt.
+            if(errno == EINTR || errno == EAGAIN)      continue; // All is good. This is just interrrupt.
             else {
                 log_error(log_tag.c_str(), "There is critical send error. Can't process client. Errno: %s", std::strerror(errno));
                 return -1;
@@ -168,6 +167,8 @@ SSL* init_tls_server_client(int & client_socket, SSL* server_context)
 
     SSL *client = SSL_new(server_context);
 
+    SSL_set_io(server_context, (void  *) recv, (void  *) send);
+
     SSL_set_fd(client, client_socket);
 
     if (!SSL_accept(client))
@@ -205,6 +206,8 @@ SSL* init_tls_client(int & socket, std::string & sni, bool is_set_sni)
         log_error(log_tag.c_str(), "Error initializing client context");
         return NULL;
     }
+
+    SSL_set_io(client_context, (void  *) recv, (void  *) send);
 
     SSL_set_fd(client_context, socket);
 

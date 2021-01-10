@@ -81,4 +81,5 @@
     <string name="other_https_proxy_title">HTTPS(TLS) proxy address</string>
     <string name="save_certificate_button">Save SSL certificate</string>
     <string name="saved_to_downloads">Saved to downloads folder. File name is %1$s</string>
+    <string name="other_proxy_credentials_title">Proxy authorization credentials</string>
 </resources>

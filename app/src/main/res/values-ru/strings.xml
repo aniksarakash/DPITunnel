@@ -76,4 +76,5 @@
     <string name="other_https_proxy_title">Адрес HTTPS(TLS) прокси сервера</string>
     <string name="save_certificate_button">Сохранить сертификат SSL</string>
     <string name="saved_to_downloads">Сохранено в папку загрузок. Имя файла %1$s</string>
+    <string name="other_proxy_credentials_title">Учетные данные для авторизации прокси</string>
 </resources>

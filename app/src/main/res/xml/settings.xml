@@ -182,6 +182,11 @@
             android:title="@string/other_https_proxy_title"
             android:defaultValue="address:port" />
         <androidx.preference.EditTextPreference
+            android:dialogTitle="@string/other_proxy_credentials_title"
+            android:key="other_proxy_credentials"
+            android:title="@string/other_proxy_credentials_title"
+            android:defaultValue="login:password" />
+        <androidx.preference.EditTextPreference
             android:dialogTitle="@string/other_bind_port_title"
             android:key="other_bind_port"
             android:summary="@string/other_bind_port_summary"

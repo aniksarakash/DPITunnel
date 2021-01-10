@@ -82,6 +82,7 @@ struct Settings
         std::string socks5_server;
         std::string http_proxy_server;
         std::string https_proxy_server;
+        std::string proxy_credentials;
         int bind_port;
         bool is_use_vpn;
     } other;
