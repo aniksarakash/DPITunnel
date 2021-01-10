@@ -65,7 +65,7 @@ void proxy_https(int client_socket, std::string host, int port)
 	// Set proper timeout
 	struct timeval structtimeval;
 	structtimeval.tv_sec = 0;
-	structtimeval.tv_usec = 0;
+	structtimeval.tv_usec = 50;
 	if(setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (char *) &structtimeval, sizeof(structtimeval)) < 0)
 	{
 		log_error(log_tag.c_str(), "Can't setsockopt on socket");
@@ -230,7 +230,7 @@ void proxy_https(int client_socket, std::string host, int port)
 					if(send_string(client_socket, buffer, last_char) == -1) // Send response to client
 						break;
 				}
-				if(settings.sni.is_use_sni_replace && hostlist_condition)
+				else if(settings.sni.is_use_sni_replace && hostlist_condition)
 				{
 					if (recv_string_tls(remote_server_socket, client_context, buffer, last_char) ==
 						-1) // Receive response from server
@@ -387,7 +387,8 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 				modify_http_request(buffer, hostlist_condition);
 
 				if(hostlist_condition && settings.http.is_use_https_proxy)
-					send_string_tls(remote_server_socket, client_context, buffer, last_char);
+					if(send_string_tls(remote_server_socket, client_context, buffer, last_char) == -1)
+						break;
 				else
 				{
 					// Check if split is need
@@ -412,6 +413,7 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 					recv_string_tls(remote_server_socket, client_context, buffer, last_char);
 				else if(recv_string(remote_server_socket, buffer, last_char) == -1) // Receive response from server
 					break;
+
 				if(send_string(client_socket, buffer, last_char) == -1) // Send response to client
 					break;
 			}

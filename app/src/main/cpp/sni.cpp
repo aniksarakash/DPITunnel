@@ -72,7 +72,7 @@ int recv_string_tls(int & socket, SSL *context, std::string & message, unsigned 
         read_size = SSL_read(context, &message[0] + message_offset, message.size() - message_offset);
         if(read_size < 0)
         {
-            if(errno == EWOULDBLOCK || errno == EAGAIN || errno == ENOTTY)	break;
+            if(errno == EWOULDBLOCK || errno == EAGAIN)	break;
             if(errno == EINTR)      continue; // All is good. This is just interrrupt.
             else
             {
