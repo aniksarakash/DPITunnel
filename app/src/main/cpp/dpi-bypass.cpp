@@ -65,7 +65,11 @@ void proxy_https(int client_socket, std::string host, int port)
 	// Set proper timeout
 	struct timeval structtimeval;
 	structtimeval.tv_sec = 0;
-	structtimeval.tv_usec = 50;
+	if(hostlist_condition && settings.https.is_use_https_proxy)
+		structtimeval.tv_usec = 50;
+	else
+		structtimeval.tv_usec = 0;
+	
 	if(setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (char *) &structtimeval, sizeof(structtimeval)) < 0)
 	{
 		log_error(log_tag.c_str(), "Can't setsockopt on socket");
@@ -387,8 +391,10 @@ void proxy_http(int client_socket, std::string host, int port, std::string first
 				modify_http_request(buffer, hostlist_condition);
 
 				if(hostlist_condition && settings.http.is_use_https_proxy)
+				{
 					if(send_string_tls(remote_server_socket, client_context, buffer, last_char) == -1)
 						break;
+				}
 				else
 				{
 					// Check if split is need
