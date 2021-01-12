@@ -65,10 +65,7 @@ void proxy_https(int client_socket, std::string host, int port)
 	// Set proper timeout
 	struct timeval structtimeval;
 	structtimeval.tv_sec = 0;
-	if(hostlist_condition && settings.https.is_use_https_proxy)
-		structtimeval.tv_usec = 50;
-	else
-		structtimeval.tv_usec = 0;
+	structtimeval.tv_usec = 0;
 	if(setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (char *) &structtimeval, sizeof(structtimeval)) < 0)
 	{
 		log_error(log_tag.c_str(), "Can't setsockopt on socket");

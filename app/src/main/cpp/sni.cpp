@@ -208,6 +208,18 @@ SSL* init_tls_client(int & socket, std::string & sni, bool is_set_sni)
         return NULL;
     }
 
+    // Switch socket to blocking mode
+    long arg;
+    if((arg = fcntl(socket, F_GETFL, NULL)) < 0) {
+        log_error(log_tag.c_str(), "Failed to set blocking mode for socket. Error: %s", std::strerror(errno));
+        return NULL;
+    }
+    arg &= (~O_NONBLOCK);
+    if(fcntl(socket, F_SETFL, arg) < 0) {
+        log_error(log_tag.c_str(), "Failed to set blocking mode for socket. Error: %s", std::strerror(errno));
+        exit(0);
+    }
+
     SSL_set_io(client_context, (void  *) recv, (void  *) send);
 
     SSL_set_fd(client_context, socket);
@@ -218,6 +230,17 @@ SSL* init_tls_client(int & socket, std::string & sni, bool is_set_sni)
     int ret;
     if ((ret = SSL_connect(client_context)) != 1) {
         log_error(log_tag.c_str(), "Handshake Error %i. Errno %s", ret, std::strerror(errno));
+        return NULL;
+    }
+
+    // Switch socket to non-blocking mode
+    if( (arg = fcntl(socket, F_GETFL, NULL)) < 0) {
+        log_error(log_tag.c_str(), "Failed to set non-blocking mode for socket. Error: %s", std::strerror(errno));
+        return NULL;
+    }
+    arg |= O_NONBLOCK;
+    if( fcntl(socket, F_SETFL, arg) < 0) {
+        log_error(log_tag.c_str(), "Failed to set non-blocking mode for socket. Error: %s", std::strerror(errno));
         return NULL;
     }
 
