@@ -155,14 +155,10 @@ public class LocalDNSServer extends Thread {
             VpnService vpnService = new VpnService();
             serverSocket = new DatagramSocket(49150);
             vpnService.protect(serverSocket);
+            serverSocket.setSoTimeout(1000);
         } catch (Exception e) {
             Log.e(log_tag, "Failed to create server socket");
             e.printStackTrace();
-        }
-        try {
-            serverSocket.setSoTimeout(1000);
-        } catch (Exception e) {
-            Log.e(log_tag, "Failed to set server socket timeout");
         }
         while (isRunning) {
             try {
@@ -210,6 +206,7 @@ public class LocalDNSServer extends Thread {
 
     public void quit() {
         isRunning = false;
+        serverSocket.close();
     }
 
 }

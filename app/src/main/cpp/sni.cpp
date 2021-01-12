@@ -116,7 +116,8 @@ int send_string_tls(int & socket, TLSContext *context, const std::string & strin
         ssize_t send_size = SSL_write(context, string_to_send.c_str() + offset, last_char - offset);
         if(send_size < 0)
         {
-            if(errno == EINTR || errno == EAGAIN)      continue; // All is good. This is just interrrupt.
+            if(errno == EAGAIN) break;
+            if(errno == EINTR)      continue; // All is good. This is just interrrupt.
             else {
                 log_error(log_tag.c_str(), "There is critical send error. Can't process client. Errno: %s", std::strerror(errno));
                 return -1;
